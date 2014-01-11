@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>§ <%= level.type %> <%= level.num %>: <%= level.heading %></title>
+        <title>§ <%= d.level.type %> <%= d.level.num %>: <%= d.level.heading %></title>
         <meta http-equiv='content-type' content='text/html; charset=utf-8' />
         <link rel='stylesheet' media='screen' type='text/css' href='/css/base.css' />
     </head>
@@ -11,15 +11,20 @@
                 <a href='/'>home</a>,
                 <a href='about.html'>about</a>
             </div>
-            <h1>The DC Code: § <%= level.type %> <%= level.num %>: <%= level.heading %></h1>
+            <h1>The DC Code: § <%= d.level.type %> <%= d.level.num %>: <%= d.level.heading %></h1>
             <a href='../'>Index</a>
         </header>
-        <%= level.text %>
-        <% (level.level || []).forEach(function(l) { %>
+        <% d.level.text.forEach(function(t) { %>
+            <%= cited(t) %>
+        <% }); %>
+        <% (d.level.level || []).forEach(function(l) { %>
             <%= l.type %>
             <% if (l.level) { (Array.isArray(l.level) ? l.level : [l.level]).forEach(function(sublevel) { %>
                 <h3><%= sublevel.heading %></h3>
-                <div><%= sublevel.text %></div>
+                <% if (!Array.isArray(sublevel.text)) sublevel.text = [sublevel.text] %>
+                <% if (sublevel.text) { sublevel.text.forEach(function(t) { %>
+                    <div><%= cited(t) %></div>
+                <% }); } %>
             <% }); } %>
         <% }); %>
     </body>
