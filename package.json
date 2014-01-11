@@ -1,0 +1,23 @@
+{
+  "name": "simple-2013",
+  "version": "0.0.0",
+  "description": "a rough cut of a parser and generator for a browser for dc laws",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "dc",
+    "law",
+    "legislation",
+    "parser",
+    "generator"
+  ],
+  "author": "",
+  "license": "Public Domain",
+  "dependencies": {
+    "lodash": "~2.4.1",
+    "glob": "~3.2.8",
+    "findit": "~1.1.0"
+  }
+}
