@@ -1,6 +1,6 @@
 import xmltodict, os, json
 
-for folder, subs, files in os.walk('dc-code-prototype'):
+for folder, subs, files in os.walk('code'):
     for f in files:
         path = os.path.join(folder, f)
         (root, ext) = os.path.splitext(path)
