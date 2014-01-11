@@ -6,7 +6,7 @@ import sys
 if len(sys.argv) > 1:
   code_dir = sys.argv[1]
 else:
-  code_dir = "dc-code-prototype"
+  code_dir = "code"
 
 for folder, subs, files in os.walk(code_dir):
     for f in files:
