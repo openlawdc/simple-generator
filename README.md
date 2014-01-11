@@ -16,5 +16,5 @@ python convert.py
 Convert JSON sources to HTML
 
 ```
-node index.js
+node index.js code
 ```

@@ -1,3 +1,3 @@
 [submodule "dc-code-prototype"]
-	path = dc-code-prototype
+	path = code
 	url = https://github.com/JoshData/dc-code-prototype.git
