@@ -1,6 +1,14 @@
-import xmltodict, os, json
+#!/usr/bin/env python
 
-for folder, subs, files in os.walk('dc-code-prototype'):
+import xmltodict, os, json
+import sys
+
+if len(sys.argv) > 1:
+  code_dir = sys.argv[1]
+else:
+  code_dir = "dc-code-prototype"
+
+for folder, subs, files in os.walk(code_dir):
     for f in files:
         path = os.path.join(folder, f)
         (root, ext) = os.path.splitext(path)
