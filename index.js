@@ -15,6 +15,9 @@ function ondirectory(dir, stat, stop) {
 }
 
 function onfile(file, stat) {
+    // run a specific file by putting it on the command line
+    if (process.argv.length > 3 && !file.match(process.argv[3])) return;
+
     if (file.match(/json$/)) {
         console.log(file);
 
