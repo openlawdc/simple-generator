@@ -1,5 +1,6 @@
 var finder = require('findit')(process.argv[2] || '.'),
     path = require('path'),
+    et = require('elementtree'),
     Citation = require('citation'),
     _ = require('lodash'),
     fs = require('fs');
@@ -17,75 +18,152 @@ function ondirectory(dir, stat, stop) {
 function onfile(file, stat) {
     // run a specific file by putting it on the command line
     if (process.argv.length > 3 && !file.match(process.argv[3])) return;
+    if (file.match(/\.xml$/))
+        convert_file(file);
+}
 
-    if (file.match(/json$/)) {
-        console.log(file);
+function parse_xml_file(file) {
+    var xml = fs.readFileSync(file).toString(); // not sure why toSting is needed to make a string
+    return et.parse(xml)._root;
+}
 
-        var f = JSON.parse(fs.readFileSync(file));
-        if (!f.level) return;
+function convert_file(file) {
+    console.log(file);
 
-        // Map xs:include's to their JSON data.
-        var children = f.level['ns0:include'];
-        if (Array.isArray(children)) {
-            children = children.map(function(x) { return {
-                filename: x["@href"].replace(".xml", ".html"),
-                title: make_page_title(JSON.parse(fs.readFileSync(path.dirname(file) + "/" + x["@href"].replace(".xml", ".json"))))
-            }; });
-        }
+    var dom = parse_xml_file(file);
+    if (dom.tag != "level") return;
 
-        if (f.level.level && !Array.isArray(f.level.level)) {
-            f.level.level = [f.level.level];
-        }
-        if (f.level.text && !Array.isArray(f.level.text)) {
-            f.level.text = [f.level.text];
-        }
-        if (!f.level.text) f.level.text = [];
+    // Map xs:include's to information we need to make a link.
+    var children = dom.findall("ns0:include").map(function(node) {
+        return {
+            filename: node.get('href').replace(".xml", ".html"),
+            title: make_page_title(parse_xml_file(path.dirname(file) + "/" + node.get('href')))
+        }; });
 
-        fs.writeFileSync(file.replace('json', 'html'),
-            body_template({
-                d: f,
-                cited: cited,
-                title: make_page_title(f),
-                children: children,
-                is_index_file: file.match(/index.json$/)
-            }));
-    }
+    // Get the <text> and <level> nodes that make up the body
+    // and flatten it out so the template doesn't have to deal with
+    // the recursive nature of <level> nodes.
+    var body_paras= [];
+    flatten_body(dom, body_paras);
+
+    // Write HTML.
+    fs.writeFileSync(file.replace('.xml', '.html'),
+        body_template({
+            cited: cited,
+            title: make_page_title(dom),
+            body: body_paras,
+            children: children,
+            is_index_file: file.match(/index.xml$/)
+        }));
 }
 
 function make_page_title(obj) {
-    var level = obj.level;
+    var level_type = obj.find("type").text;
 
     var title = null;
 
-    if (level.type == "Section") {
-        title = "§" + level.num;
+    if (level_type == "Section") {
+        title = "§" + obj.find("num").text;
 
-    } else if (level.type == "placeholder") {
-        title = "[";
+    } else if (level_type == "placeholder") {
+        var level_section = obj.find("section");
+        var level_section_start = obj.find("section-start");
+        var level_section_end = obj.find("section-end");
+        var level_section_range_type = obj.find("section-range-type");
 
-        if (level.section)
-            title += "§" + level.num;
-        else if (level["section-range-type"] == "range")
-            title += "§" + level["section-start"] + "-§" + level["section-end"];
-        else if (level["section-range-type"] == "list")
-            title += "§" + level["section-start"] + ", §" + level["section-end"];
-
-        if (level.reason)
-            title += " (" + level.reason + ")";
-
-        title += "]";
+        if (level_section)
+            title = "§" + level_section.text;
+        else if (level_section_range_type.text == "range")
+            title = "§" + level_section_start.text + "-§" + level_section_end.text;
+        else if (level_section_range_type.text == "list")
+            title = "§" + level_section_start.text + ", §" + level_section_end.text;
 
     } else {
         // Division, Title, Part, etc.
-        title = level.type + " " + level.num;
+        title = level_type;
+        if (obj.find("num"))
+            title += " " + obj.find("num").text;
     }
 
-    if (title && level.heading)
-        title += ": " + level.heading;
-    else if (!title && level.heading)
-        title = level.heading;
+    var level_heading = obj.find("heading");
+    if (level_heading) {
+        if (!title)
+            title = "";
+        else
+            title += ": ";
+        title += level_heading.text;
+    }
+
+    // For placeholders.
+    var level_reason = obj.find("reason");
+    if (level_reason)
+        title += " (" + level_reason.text + ")";
 
     return title;
+}
+
+function flatten_body(node, paras, indentation, parent_node_text, parent_node_indents) {
+    node.getchildren()
+        .filter(function(node) { return node.tag == "text" || node.tag == "level" })
+        .forEach(function(child, i) {
+            if (child.tag == "text") {
+                var initial_text = [];
+                var my_indentation = indentation || 0;
+                if (i == 0 && parent_node_text) {
+                    // This is the first paragraph within a level. Put the
+                    // parent number and heading here.
+                    initial_text = parent_node_text;
+                    my_indentation -= parent_node_indents;
+                }
+
+                paras.push({ text: initial_text.concat(flatten_text(child)), indentation: my_indentation });
+
+            } else if (child.tag == "level") {
+                /*if (i == 0 && parent_node_text) {
+                    paras.push({ text: parent_node_text, indentation: indentation||0 });
+                    parent_node_text = null;
+                }*/
+
+                var type = child.find("type");
+                if (type && type.text == "annotations") {
+                    paras.push({ text: [{text: "Annotations"}], indentation: indentation||0, class: "heading" });
+                } else if (type && type.text == "appendices") {
+                    paras.push({ text: [{text: "Appendices"}], indentation: indentation||0, class: "heading" });
+                }
+
+                // TODO: form and table
+
+                // Don't display the level's num and heading here but rather on the first
+                // paragraph within the level. 
+                var my_num_heading = [];
+                if (child.find("num")) my_num_heading.push( { text: child.find("num").text } );
+                if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + " --- ", style: "font-style: italic" } );
+                if (my_num_heading.length == 0) my_num_heading = null;
+
+                // If we're the first paragraph within a level, continue to pass down the parent node's
+                // number and heading until it reaches a text node where it gets displayed.
+                var pni = parent_node_indents || 0;
+                if (i == 0 && parent_node_text) {
+                    my_num_heading = parent_node_text.concat(my_num_heading);
+                    pni += 1;
+                }
+
+                // The children at the top level are indentation zero, but inside that the
+                // indentation has to go up by 1.
+                flatten_body(child, paras, indentation == null ? 0 : indentation+1, my_num_heading, pni);
+            }
+        });
+}
+
+function flatten_text(node) {
+    var ret = [];
+    ret.push({ text: node.text, style: "" })
+    node.getchildren()
+        .forEach(function(child) {
+            ret.push({ text: child.text, style: child.get("style") })
+            if (child.tail) ret.push({ text: child.tail, style: "" })
+        });
+    return ret;
 }
 
 function cited(text) {

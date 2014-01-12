@@ -23,18 +23,12 @@
             <% } %>
         </header>
 
-        <% d.level.text.forEach(function(t) { %>
-            <%= cited(t) %>
-        <% }); %>
-        <% (d.level.level || []).forEach(function(l) { %>
-            <%= l.type %>
-            <% if (l.level) { (Array.isArray(l.level) ? l.level : [l.level]).forEach(function(sublevel) { %>
-                <h3><%= sublevel.heading %></h3>
-                <% if (!Array.isArray(sublevel.text)) sublevel.text = [sublevel.text] %>
-                <% if (sublevel.text) { sublevel.text.forEach(function(t) { %>
-                    <div><%= cited(t) %></div>
-                <% }); } %>
-            <% }); } %>
+        <% body.forEach(function(l) { %>
+            <p class="<%= l.class %>" style="margin-left: <%=l.indentation%>em">
+                <% l.text.forEach(function(span) { %>
+                    <span style="<%- span.style %>"><%- span.text %></span>
+                <% }); %>
+            </p>
         <% }); %>
 
         <% if (children) { %>
