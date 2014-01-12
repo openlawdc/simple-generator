@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>§ <%= d.level.type %> <%= d.level.num %>: <%= d.level.heading %></title>
+        <title>
+            DC Code <%= title %>
+        </title>
         <meta http-equiv='content-type' content='text/html; charset=utf-8' />
         <link rel='stylesheet' media='screen' type='text/css' href='/css/base.css' />
     </head>
@@ -11,9 +13,16 @@
                 <a href='/'>home</a>,
                 <a href='about.html'>about</a>
             </div>
-            <h1>The DC Code: § <%= d.level.type %> <%= d.level.num %>: <%= d.level.heading %></h1>
-            <a href='../'>Index</a>
+            <h1>
+                <%= title %>
+            </h1>
+            <% if (is_index_file) { %>
+                <p><a href='../'>Up a Level</a></p>
+            <% } else { %>
+                <p><a href='index.html'>Up a Level</a></p>
+            <% } %>
         </header>
+
         <% d.level.text.forEach(function(t) { %>
             <%= cited(t) %>
         <% }); %>
@@ -27,5 +36,13 @@
                 <% }); } %>
             <% }); } %>
         <% }); %>
+
+        <% if (children) { %>
+            <ul>
+            <% children.forEach(function(s) { %>
+                <li><a href="<%= s.filename%>"><%= s.title%></a></li>
+            <% }); %>
+            </ul>
+        <% } %>
     </body>
 </html>

@@ -4,20 +4,7 @@ var finder = require('findit')(process.argv[2] || '.'),
     _ = require('lodash'),
     fs = require('fs');
 
-var templates = {
-    chapter: _.template(fs.readFileSync('templates/chapter._')),
-    title: _.template(fs.readFileSync('templates/title._')),
-    section: _.template(fs.readFileSync('templates/section._')),
-    subtitle: _.template(fs.readFileSync('templates/subtitle._')),
-    division: _.template(fs.readFileSync('templates/subtitle._')),
-    subchapter: _.template(fs.readFileSync('templates/subchapter._')),
-    article: _.template(fs.readFileSync('templates/article._')),
-    unit: _.template(fs.readFileSync('templates/unit._')),
-    part: _.template(fs.readFileSync('templates/part._')),
-    subdivision: _.template(fs.readFileSync('templates/subdivision._')),
-    subpart: _.template(fs.readFileSync('templates/subpart._')),
-    placeholder: _.template(fs.readFileSync('templates/placeholder._'))
-};
+var body_template = _.template(fs.readFileSync('templates/section._'));
 
 finder.on('directory', ondirectory)
     .on('file', onfile);
@@ -29,61 +16,73 @@ function ondirectory(dir, stat, stop) {
 
 function onfile(file, stat) {
     if (file.match(/json$/)) {
+        console.log(file);
+
         var f = JSON.parse(fs.readFileSync(file));
         if (!f.level) return;
-        if (!Array.isArray(f.level['ns0:include'])) {
-            f.level['ns0:include'] = [f.level['ns0:include']];
+
+        // Map xs:include's to their JSON data.
+        var children = f.level['ns0:include'];
+        if (Array.isArray(children)) {
+            children = children.map(function(x) { return {
+                filename: x["@href"].replace(".xml", ".html"),
+                title: make_page_title(JSON.parse(fs.readFileSync(path.dirname(file) + "/" + x["@href"].replace(".xml", ".json"))))
+            }; });
         }
-        if (f.level.type == 'Title') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.title(f));
-        } else if (f.level.type == 'Chapter') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.chapter(f));
-        } else if (f.level.type == 'Subtitle') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.subtitle(f));
-        } else if (f.level.type == 'Section') {
-            if (f.level.level && !Array.isArray(f.level.level)) {
-                f.level.level = [f.level.level];
-            }
-            if (f.level.text && !Array.isArray(f.level.text)) {
-                f.level.text = [f.level.text];
-            }
-            if (!f.level.text) f.level.text = [];
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.section({
-                    d: f,
-                    cited: cited
-                }));
-        } else if (f.level.type == 'Division') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.division(f));
-        } else if (f.level.type == 'placeholder') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.placeholder(f));
-        } else if (f.level.type == 'Subchapter') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.subchapter(f));
-        } else if (f.level.type == 'Unit') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.unit(f));
-        } else if (f.level.type == 'Article') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.article(f));
-        } else if (f.level.type == 'Part') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.part(f));
-        } else if (f.level.type == 'Subdivision') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.subdivision(f));
-        } else if (f.level.type == 'Subpart') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.subpart(f));
-        } else {
-            console.log(f.level.type);
+
+        if (f.level.level && !Array.isArray(f.level.level)) {
+            f.level.level = [f.level.level];
         }
+        if (f.level.text && !Array.isArray(f.level.text)) {
+            f.level.text = [f.level.text];
+        }
+        if (!f.level.text) f.level.text = [];
+
+        fs.writeFileSync(file.replace('json', 'html'),
+            body_template({
+                d: f,
+                cited: cited,
+                title: make_page_title(f),
+                children: children,
+                is_index_file: file.match(/index.json$/)
+            }));
     }
+}
+
+function make_page_title(obj) {
+    var level = obj.level;
+
+    var title = null;
+
+    if (level.type == "Section") {
+        title = "§" + level.num;
+
+    } else if (level.type == "placeholder") {
+        title = "[";
+
+        if (level.section)
+            title += "§" + level.num;
+        else if (level["section-range-type"] == "range")
+            title += "§" + level["section-start"] + "-§" + level["section-end"];
+        else if (level["section-range-type"] == "list")
+            title += "§" + level["section-start"] + ", §" + level["section-end"];
+
+        if (level.reason)
+            title += " (" + level.reason + ")";
+
+        title += "]";
+
+    } else {
+        // Division, Title, Part, etc.
+        title = level.type + " " + level.num;
+    }
+
+    if (title && level.heading)
+        title += ": " + level.heading;
+    else if (!title && level.heading)
+        title = level.heading;
+
+    return title;
 }
 
 function cited(text) {
