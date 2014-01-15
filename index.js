@@ -1,4 +1,6 @@
-var finder = require('findit')(process.argv[2] || '.'),
+var basedir = process.argv[2] || '.';
+
+var finder = require('findit')(basedir),
     path = require('path'),
     et = require('elementtree'),
     Citation = require('citation'),
@@ -9,6 +11,8 @@ var body_template = _.template(fs.readFileSync('templates/section._'));
 
 finder.on('directory', ondirectory)
     .on('file', onfile);
+
+var section_to_filename = JSON.parse(fs.readFileSync(basedir + '/section_index.js'));
 
 function ondirectory(dir, stat, stop) {
     var base = path.basename(dir);
@@ -157,16 +161,27 @@ function flatten_body(node, paras, indentation, parent_node_text, parent_node_in
 
 function flatten_text(node) {
     var ret = [];
-    ret.push({ text: node.text, style: "" })
+    ret.push({ text: cited(node.text), style: "" })
     node.getchildren()
         .forEach(function(child) {
-            ret.push({ text: child.text, style: child.get("style") })
-            if (child.tail) ret.push({ text: child.tail, style: "" })
+            ret.push({ text: cited(child.text), style: child.get("style") })
+            if (child.tail) ret.push({ text: cited(child.tail), style: "" })
         });
     return ret;
 }
 
 function cited(text) {
+    function escape_html(html) {
+      return String(html)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    text = escape_html(text);
+
     var c = Citation.find(text, {
         context: {
             dc_code: {
@@ -204,7 +219,7 @@ function cited(text) {
         if (index > 0 && index < 40) // found, and to the left of the cite
             return;
 
-        return linked("./" + cite.dc_code.title + "-" + cite.dc_code.section + '.html',
+        return linked("/" + basedir + "/" + section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section] + '.html',
             cite.match);
     }
 
