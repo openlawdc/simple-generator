@@ -1,23 +1,11 @@
 var finder = require('findit')(process.argv[2] || '.'),
     path = require('path'),
+    et = require('elementtree'),
     Citation = require('citation'),
     _ = require('lodash'),
     fs = require('fs');
 
-var templates = {
-    chapter: _.template(fs.readFileSync('templates/chapter._')),
-    title: _.template(fs.readFileSync('templates/title._')),
-    section: _.template(fs.readFileSync('templates/section._')),
-    subtitle: _.template(fs.readFileSync('templates/subtitle._')),
-    division: _.template(fs.readFileSync('templates/subtitle._')),
-    subchapter: _.template(fs.readFileSync('templates/subchapter._')),
-    article: _.template(fs.readFileSync('templates/article._')),
-    unit: _.template(fs.readFileSync('templates/unit._')),
-    part: _.template(fs.readFileSync('templates/part._')),
-    subdivision: _.template(fs.readFileSync('templates/subdivision._')),
-    subpart: _.template(fs.readFileSync('templates/subpart._')),
-    placeholder: _.template(fs.readFileSync('templates/placeholder._'))
-};
+var body_template = _.template(fs.readFileSync('templates/section._'));
 
 finder.on('directory', ondirectory)
     .on('file', onfile);
@@ -28,62 +16,154 @@ function ondirectory(dir, stat, stop) {
 }
 
 function onfile(file, stat) {
-    if (file.match(/json$/)) {
-        var f = JSON.parse(fs.readFileSync(file));
-        if (!f.level) return;
-        if (!Array.isArray(f.level['ns0:include'])) {
-            f.level['ns0:include'] = [f.level['ns0:include']];
-        }
-        if (f.level.type == 'Title') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.title(f));
-        } else if (f.level.type == 'Chapter') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.chapter(f));
-        } else if (f.level.type == 'Subtitle') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.subtitle(f));
-        } else if (f.level.type == 'Section') {
-            if (f.level.level && !Array.isArray(f.level.level)) {
-                f.level.level = [f.level.level];
-            }
-            if (f.level.text && !Array.isArray(f.level.text)) {
-                f.level.text = [f.level.text];
-            }
-            if (!f.level.text) f.level.text = [];
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.section({
-                    d: f,
-                    cited: cited
-                }));
-        } else if (f.level.type == 'Division') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.division(f));
-        } else if (f.level.type == 'placeholder') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.placeholder(f));
-        } else if (f.level.type == 'Subchapter') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.subchapter(f));
-        } else if (f.level.type == 'Unit') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.unit(f));
-        } else if (f.level.type == 'Article') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.article(f));
-        } else if (f.level.type == 'Part') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.part(f));
-        } else if (f.level.type == 'Subdivision') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.subdivision(f));
-        } else if (f.level.type == 'Subpart') {
-            fs.writeFileSync(file.replace('json', 'html'),
-                templates.subpart(f));
-        } else {
-            console.log(f.level.type);
-        }
+    // run a specific file by putting it on the command line
+    if (process.argv.length > 3 && !file.match(process.argv[3])) return;
+    if (file.match(/\.xml$/))
+        convert_file(file);
+}
+
+function parse_xml_file(file) {
+    var xml = fs.readFileSync(file).toString(); // not sure why toSting is needed to make a string
+    return et.parse(xml)._root;
+}
+
+function convert_file(file) {
+    console.log(file);
+
+    var dom = parse_xml_file(file);
+    if (dom.tag != "level") return;
+
+    // Map xs:include's to information we need to make a link.
+    var children = dom.findall("ns0:include").map(function(node) {
+        return {
+            filename: node.get('href').replace(".xml", ".html"),
+            title: make_page_title(parse_xml_file(path.dirname(file) + "/" + node.get('href')))
+        }; });
+
+    // Get the <text> and <level> nodes that make up the body
+    // and flatten it out so the template doesn't have to deal with
+    // the recursive nature of <level> nodes.
+    var body_paras= [];
+    flatten_body(dom, body_paras);
+
+    // Write HTML.
+    fs.writeFileSync(file.replace('.xml', '.html'),
+        body_template({
+            cited: cited,
+            title: make_page_title(dom),
+            body: body_paras,
+            children: children,
+            is_index_file: file.match(/index.xml$/)
+        }));
+}
+
+function make_page_title(obj) {
+    var level_type = obj.find("type").text;
+
+    var title = null;
+
+    if (level_type == "Section") {
+        title = "§" + obj.find("num").text;
+
+    } else if (level_type == "placeholder") {
+        var level_section = obj.find("section");
+        var level_section_start = obj.find("section-start");
+        var level_section_end = obj.find("section-end");
+        var level_section_range_type = obj.find("section-range-type");
+
+        if (level_section)
+            title = "§" + level_section.text;
+        else if (level_section_range_type.text == "range")
+            title = "§" + level_section_start.text + "-§" + level_section_end.text;
+        else if (level_section_range_type.text == "list")
+            title = "§" + level_section_start.text + ", §" + level_section_end.text;
+
+    } else {
+        // Division, Title, Part, etc.
+        title = level_type;
+        if (obj.find("num"))
+            title += " " + obj.find("num").text;
     }
+
+    var level_heading = obj.find("heading");
+    if (level_heading) {
+        if (!title)
+            title = "";
+        else
+            title += ": ";
+        title += level_heading.text;
+    }
+
+    // For placeholders.
+    var level_reason = obj.find("reason");
+    if (level_reason)
+        title += " (" + level_reason.text + ")";
+
+    return title;
+}
+
+function flatten_body(node, paras, indentation, parent_node_text, parent_node_indents) {
+    node.getchildren()
+        .filter(function(node) { return node.tag == "text" || node.tag == "level" })
+        .forEach(function(child, i) {
+            if (child.tag == "text") {
+                var initial_text = [];
+                var my_indentation = indentation || 0;
+                if (i == 0 && parent_node_text) {
+                    // This is the first paragraph within a level. Put the
+                    // parent number and heading here.
+                    initial_text = parent_node_text;
+                    my_indentation -= parent_node_indents;
+                }
+
+                paras.push({ text: initial_text.concat(flatten_text(child)), indentation: my_indentation });
+
+            } else if (child.tag == "level") {
+                /*if (i == 0 && parent_node_text) {
+                    paras.push({ text: parent_node_text, indentation: indentation||0 });
+                    parent_node_text = null;
+                }*/
+
+                var type = child.find("type");
+                if (type && type.text == "annotations") {
+                    paras.push({ text: [{text: "Annotations"}], indentation: indentation||0, class: "heading" });
+                } else if (type && type.text == "appendices") {
+                    paras.push({ text: [{text: "Appendices"}], indentation: indentation||0, class: "heading" });
+                }
+
+                // TODO: form and table
+
+                // Don't display the level's num and heading here but rather on the first
+                // paragraph within the level. 
+                var my_num_heading = [];
+                if (child.find("num")) my_num_heading.push( { text: child.find("num").text } );
+                if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + " --- ", style: "font-style: italic" } );
+                if (my_num_heading.length == 0) my_num_heading = null;
+
+                // If we're the first paragraph within a level, continue to pass down the parent node's
+                // number and heading until it reaches a text node where it gets displayed.
+                var pni = parent_node_indents || 0;
+                if (i == 0 && parent_node_text) {
+                    my_num_heading = parent_node_text.concat(my_num_heading);
+                    pni += 1;
+                }
+
+                // The children at the top level are indentation zero, but inside that the
+                // indentation has to go up by 1.
+                flatten_body(child, paras, indentation == null ? 0 : indentation+1, my_num_heading, pni);
+            }
+        });
+}
+
+function flatten_text(node) {
+    var ret = [];
+    ret.push({ text: node.text, style: "" })
+    node.getchildren()
+        .forEach(function(child) {
+            ret.push({ text: child.text, style: child.get("style") })
+            if (child.tail) ret.push({ text: child.tail, style: "" })
+        });
+    return ret;
 }
 
 function cited(text) {

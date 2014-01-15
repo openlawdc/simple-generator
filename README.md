@@ -9,19 +9,16 @@ You'll need to git clone in a copy of dc-code-prototype like
 
     git clone https://github.com/JoshData/dc-code-prototype.git code
 
-Requires Python 3
-
-Convert XML source to JSON
-
-```
-easy_install xmltodict
-python3 convert.py
-```
-
-Convert JSON sources to HTML
+Convert XML sources to HTML:
 
 ```
 node index.js code
+```
+
+Or just specific files (pass a regular expression):
+
+```
+node index.js code code/Division-I/Title-2/Chapter-17/2-1713.json
 ```
 
 [Then set up a testing server](https://gist.github.com/tmcw/4989751) like

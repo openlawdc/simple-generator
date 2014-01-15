@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>§ <%= d.level.type %> <%= d.level.num %>: <%= d.level.heading %></title>
+        <title>
+            DC Code <%= title %>
+        </title>
         <meta http-equiv='content-type' content='text/html; charset=utf-8' />
         <link rel='stylesheet' media='screen' type='text/css' href='/css/base.css' />
     </head>
@@ -11,21 +13,30 @@
                 <a href='/'>home</a>,
                 <a href='about.html'>about</a>
             </div>
-            <h1>The DC Code: § <%= d.level.type %> <%= d.level.num %>: <%= d.level.heading %></h1>
-            <a href='../'>Index</a>
+            <h1>
+                <%= title %>
+            </h1>
+            <% if (is_index_file) { %>
+                <p><a href='../'>Up a Level</a></p>
+            <% } else { %>
+                <p><a href='index.html'>Up a Level</a></p>
+            <% } %>
         </header>
-        <% d.level.text.forEach(function(t) { %>
-            <%= cited(t) %>
+
+        <% body.forEach(function(l) { %>
+            <p class="<%= l.class %>" style="margin-left: <%=l.indentation%>em">
+                <% l.text.forEach(function(span) { %>
+                    <span style="<%- span.style %>"><%- span.text %></span>
+                <% }); %>
+            </p>
         <% }); %>
-        <% (d.level.level || []).forEach(function(l) { %>
-            <%= l.type %>
-            <% if (l.level) { (Array.isArray(l.level) ? l.level : [l.level]).forEach(function(sublevel) { %>
-                <h3><%= sublevel.heading %></h3>
-                <% if (!Array.isArray(sublevel.text)) sublevel.text = [sublevel.text] %>
-                <% if (sublevel.text) { sublevel.text.forEach(function(t) { %>
-                    <div><%= cited(t) %></div>
-                <% }); } %>
-            <% }); } %>
-        <% }); %>
+
+        <% if (children) { %>
+            <ul>
+            <% children.forEach(function(s) { %>
+                <li><a href="<%= s.filename%>"><%= s.title%></a></li>
+            <% }); %>
+            </ul>
+        <% } %>
     </body>
 </html>
