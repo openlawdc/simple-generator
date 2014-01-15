@@ -5,7 +5,11 @@ as HTML.
 
 ## usage
 
-You'll need to git clone in a copy of dc-code-prototype like
+Install dependencies:
+
+    npm install
+
+Get the code by doing a `git clone` for dc-code-prototype repository:
 
     git clone https://github.com/JoshData/dc-code-prototype.git code
 
