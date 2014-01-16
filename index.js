@@ -53,6 +53,15 @@ function convert_file(file) {
     var body_paras = [];
     flatten_body(dom, body_paras);
 
+    // Set indentation_pixels and the has-level-num on paragraphs with a level-num span.
+    body_paras.forEach(function(para) {
+        para.indentation_pixels = 30*para.indentation;
+        para.text.forEach(function(span) {
+            if (span.class == "level-num")
+                para.class += " has-level-num";
+        });
+    });
+
     // Also split the paragraphs into subgroups so we can style the annotations
     // separately from the main code content.
     var body_groups = [ { group: null, paras: [] } ];
@@ -65,15 +74,12 @@ function convert_file(file) {
 
     // Find the ancestors of this file.
     var ancestors = [];
-    var parent_id = get_file_id(dom, file);
+    var page_id = get_file_id(dom, file);
+    var parent_id = page_id;
     while (true) {
         parent_id = section_to_parent[parent_id];
         if (!parent_id) break;
-        var parent_file = section_to_filename[parent_id];
-        ancestors.push({
-            filename: "/" + basedir + "/" + parent_file +".html",
-            title: make_page_title(parse_xml_file(basedir + "/" + parent_file + ".xml"))
-        })
+        ancestors.push(make_page_link(parent_id));
     }
     ancestors.reverse();
 
@@ -88,6 +94,15 @@ function convert_file(file) {
         }));
 }
 
+function make_page_link(page_id) {
+    if (!page_id) return null;
+    var file = section_to_filename[page_id];
+    return {
+        filename: "/" + basedir + "/" + file +".html",
+        title: make_page_title(parse_xml_file(basedir + "/" + file + ".xml"))
+    };
+}
+
 function make_page_title(obj) {
     var level_type = obj.find("type").text;
 
@@ -97,7 +112,7 @@ function make_page_title(obj) {
         // this is the root, just use the heading
 
     } else if (level_type == "Section") {
-        title = "§" + obj.find("num").text;
+        title = "§ " + obj.find("num").text;
 
     } else if (level_type == "placeholder") {
         var level_section = obj.find("section");
@@ -124,7 +139,7 @@ function make_page_title(obj) {
         if (!title)
             title = "";
         else
-            title += ": ";
+            title += ". ";
         title += level_heading.text;
     }
 
@@ -154,7 +169,7 @@ function flatten_body(node, paras, indentation, parent_node_text, parent_node_in
                     }
                 }
 
-                paras.push({ text: initial_text.concat(flatten_text(child)), indentation: my_indentation, group: para_group });
+                paras.push({ text: initial_text.concat(flatten_text(child)), indentation: my_indentation, group: para_group, class: "" });
 
             } else if (child.tag == "level") {
                 var child_para_group = para_group;
@@ -162,7 +177,7 @@ function flatten_body(node, paras, indentation, parent_node_text, parent_node_in
                 var type = child.find("type");
                 if (type && ["annotations", "appendices", "form", "table"].indexOf(type.text) >= 0) {
                     child_para_group = type.text;
-                    //paras.push({ text: [{text: type.text}], indentation: indentation||0, group: child_para_group });
+                    //paras.push({ text: [{text: type.text}], indentation: indentation||0, group: child_para_group, class: "" });
                 }
 
                 // TODO: form and table
@@ -170,8 +185,8 @@ function flatten_body(node, paras, indentation, parent_node_text, parent_node_in
                 // Don't display the level's num and heading here but rather on the first
                 // paragraph within the level. 
                 var my_num_heading = [];
-                if (child.find("num")) my_num_heading.push( { text: child.find("num").text + " " } );
-                if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + (child_para_group ? "" : " --- "), style: "font-style: italic" } );
+                if (child.find("num")) my_num_heading.push( { text: child.find("num").text + " ", class: "level-num" } );
+                if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + (child_para_group ? "" : " — "), class: "level-heading" } );
 
                 // If we're the first paragraph within a level, continue to pass down the parent node's
                 // number and heading until it reaches a text node where it gets displayed. But don't
@@ -197,11 +212,11 @@ function flatten_body(node, paras, indentation, parent_node_text, parent_node_in
 
 function flatten_text(node) {
     var ret = [];
-    ret.push({ text: cited(node.text), style: "" })
+    ret.push({ text: cited(node.text), class: "", style: "" })
     node.getchildren()
         .forEach(function(child) {
-            ret.push({ text: cited(child.text), style: child.get("style") })
-            if (child.tail) ret.push({ text: cited(child.tail), style: "" })
+            ret.push({ text: cited(child.text), class: "", style: child.get("style") })
+            if (child.tail) ret.push({ text: cited(child.tail), class: "" })
         });
     return ret;
 }

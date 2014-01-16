@@ -19,51 +19,67 @@
         <link rel='stylesheet' type='text/css' href='/css/icons/style.css' media='screen' />
     </head>
     <body>
-        <header>
-            <div class='right'>
-                <a href='/'>home</a>,
-                <a href='about.html'>about</a>
-            </div>
+        <div class="container">
 
-            <ul class="ancestors">
-            <% ancestors.forEach(function(s) { %>
-                <li><a href="<%= s.filename%>"><%= s.title%></a></li>
-            <% }); %>
-            </ul>
+            <header>
+                <div class='right'>
+                    <a href='/'>home</a>
+                    <a href='/about.html'>about</a>
+                </div>
+                <p id="sitename">Code of the District of Columbia (Unofficial)</p>
+            </header>
 
-            <h1>
-                <%= title %>
-            </h1>
-        </header>
+            <div class="clearfix">
 
-        <div class="content">
-
-        <% body.forEach(function(group) { %>
-            <div class="<%= group.group %>">
-            <% group.paras.forEach(function(l) { %>
-                <p class="<%= l.class %>" style="margin-left: <%=l.indentation%>em">
-                    <% l.text.forEach(function(span) { %>
-                        <span style="<%- span.style %>"><%= span.text %></span>
+            <div id="sidebar" class="col4">
+                <% if (ancestors.length > 1) { %>
+                    <h2>You Are Here</h2>
+                    <ul class="ancestors">
+                    <% ancestors.forEach(function(s, i) { %>
+                        <li><% if (i > 0) { %>↪ <% } %><a href="<%= s.filename%>"><%- s.title%></a></li>
                     <% }); %>
-                </p>
-            <% }); %>
+                    <li>↪ <%- title%></a></li>
+                    </ul>
+                <% } %>
+
+                <h2>Status of This Page</h2>
+                <p class="recency"><%- recency_info %></p>
+
             </div>
-        <% }); %>
 
-        <% if (children) { %>
-            <ul>
-            <% children.forEach(function(s) { %>
-                <li><a href="<%= s.filename%>"><%= s.title%></a></li>
-            <% }); %>
-            </ul>
-        <% } %>
+            <div class="col8">
+                <div id="content">
 
+                <h1><%= title %></h1>
+
+                <% body.forEach(function(group) { %>
+                    <div class="<%= group.group %>">
+                    <% group.paras.forEach(function(l) { %>
+                        <p class="<%= l.class %>" style="padding-left: <%= l.indentation_pixels %>px">
+                            <% l.text.forEach(function(span) { %>
+                                <span class="<%- span.class %>" style="<%- span.style %>"><%= span.text %></span>
+                            <% }); %>
+                        </p>
+                    <% }); %>
+                    </div>
+                <% }); %>
+
+                <% if (children) { %>
+                    <ul>
+                    <% children.forEach(function(s) { %>
+                        <li><a href="<%= s.filename%>"><%= s.title%></a></li>
+                    <% }); %>
+                    </ul>
+                <% } %>
+
+                </div>
+            </div>
+
+            </div>
+
+            <footer>
+                <p>This is a fast, unofficial interface to the <a href='http://dccouncil.us/UnofficialDCCode'>Unofficial DC Code</a> by <a href='https://github.com/openlawdc'>openlawdc</a>. Please <a href='https://github.com/openlawdc/simple-2/issues'>report issues</a>.</p>
+            </footer>
         </div>
-
-        <footer>
-            <p class="recency"><%- recency_info %></p>
-
-            <p>This is a fast, unofficial interface to the <a href='http://dccouncil.us/UnofficialDCCode'>Unofficial DC Code</a> by <a href='https://github.com/openlawdc'>openlawdc</a>. Please <a href='https://github.com/openlawdc/simple-2/issues'>report issues</a>.</p>
-        </footer>
     </body>
 </html>
