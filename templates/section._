@@ -29,7 +29,7 @@
                 <p id="sitename">Code of the District of Columbia (Unofficial)</p>
             </header>
 
-            <div class="clearfix">
+            <div class="clearfix" style="width: 100%;">
 
             <div id="sidebar" class="col4">
                 <% if (ancestors.length > 1) { %>
