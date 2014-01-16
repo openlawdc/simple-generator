@@ -25,6 +25,8 @@
             </h1>
         </header>
 
+        <div class="content">
+
         <% body.forEach(function(l) { %>
             <p class="<%= l.class %>" style="margin-left: <%=l.indentation%>em">
                 <% l.text.forEach(function(span) { %>
@@ -40,5 +42,13 @@
             <% }); %>
             </ul>
         <% } %>
+
+        </div>
+
+        <footer>
+            <p class="recency"><%- recency_info %></p>
+
+            <p>This is a fast, unofficial interface to the <a href='http://dccouncil.us/UnofficialDCCode'>Unofficial DC Code</a> by <a href='https://github.com/openlawdc'>openlawdc</a>. Please <a href='https://github.com/openlawdc/simple-2/issues'>report issues</a>.</p>
+        </footer>
     </body>
 </html>

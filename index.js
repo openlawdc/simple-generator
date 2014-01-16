@@ -9,6 +9,8 @@ var finder = require('findit')(basedir),
 
 var body_template = _.template(fs.readFileSync('templates/section._'));
 
+var recency_info = parse_xml_file(basedir + "/index.xml").find("meta/recency").text;
+
 finder.on('directory', ondirectory)
     .on('file', onfile);
 
@@ -72,6 +74,7 @@ function convert_file(file) {
             title: make_page_title(dom),
             body: body_paras,
             children: children,
+            recency_info: recency_info
         }));
 }
 
