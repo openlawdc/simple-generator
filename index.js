@@ -53,6 +53,16 @@ function convert_file(file) {
     var body_paras = [];
     flatten_body(dom, body_paras);
 
+    // Also split the paragraphs into subgroups so we can style the annotations
+    // separately from the main code content.
+    var body_groups = [ { group: null, paras: [] } ];
+    body_paras.forEach(function(para) {
+        if (para.group != body_groups[body_groups.length-1].group)
+            body_groups.push( { group: para.group, paras: [] } );
+        body_groups[body_groups.length-1].paras.push(para);
+    });
+
+
     // Find the ancestors of this file.
     var ancestors = [];
     var parent_id = get_file_id(dom, file);
@@ -72,7 +82,7 @@ function convert_file(file) {
         body_template({
             ancestors: ancestors,
             title: make_page_title(dom),
-            body: body_paras,
+            body: body_groups,
             children: children,
             recency_info: recency_info
         }));
@@ -126,7 +136,7 @@ function make_page_title(obj) {
     return title;
 }
 
-function flatten_body(node, paras, indentation, parent_node_text, parent_node_indents) {
+function flatten_body(node, paras, indentation, parent_node_text, parent_node_indents, para_group) {
     node.getchildren()
         .filter(function(node) { return node.tag == "text" || node.tag == "level" })
         .forEach(function(child, i) {
@@ -134,25 +144,25 @@ function flatten_body(node, paras, indentation, parent_node_text, parent_node_in
                 var initial_text = [];
                 var my_indentation = indentation || 0;
                 if (i == 0 && parent_node_text) {
-                    // This is the first paragraph within a level. Put the
-                    // parent number and heading here.
-                    initial_text = parent_node_text;
-                    my_indentation -= parent_node_indents;
+                    if (para_group) {
+                        paras.push({ text: parent_node_text, indentation: indentation, class: "subheading", group: para_group });
+                    } else {
+                        // This is the first paragraph within a level. Put the
+                        // parent number and heading here.
+                        initial_text = parent_node_text;
+                        my_indentation -= parent_node_indents;
+                    }
                 }
 
-                paras.push({ text: initial_text.concat(flatten_text(child)), indentation: my_indentation });
+                paras.push({ text: initial_text.concat(flatten_text(child)), indentation: my_indentation, group: para_group });
 
             } else if (child.tag == "level") {
-                /*if (i == 0 && parent_node_text) {
-                    paras.push({ text: parent_node_text, indentation: indentation||0 });
-                    parent_node_text = null;
-                }*/
+                var child_para_group = para_group;
 
                 var type = child.find("type");
-                if (type && type.text == "annotations") {
-                    paras.push({ text: [{text: "Annotations"}], indentation: indentation||0, class: "heading" });
-                } else if (type && type.text == "appendices") {
-                    paras.push({ text: [{text: "Appendices"}], indentation: indentation||0, class: "heading" });
+                if (type && ["annotations", "appendices", "form", "table"].indexOf(type.text) >= 0) {
+                    child_para_group = type.text;
+                    //paras.push({ text: [{text: type.text}], indentation: indentation||0, group: child_para_group });
                 }
 
                 // TODO: form and table
@@ -160,21 +170,27 @@ function flatten_body(node, paras, indentation, parent_node_text, parent_node_in
                 // Don't display the level's num and heading here but rather on the first
                 // paragraph within the level. 
                 var my_num_heading = [];
-                if (child.find("num")) my_num_heading.push( { text: child.find("num").text } );
-                if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + " --- ", style: "font-style: italic" } );
-                if (my_num_heading.length == 0) my_num_heading = null;
+                if (child.find("num")) my_num_heading.push( { text: child.find("num").text + " " } );
+                if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + (child_para_group ? "" : " --- "), style: "font-style: italic" } );
 
                 // If we're the first paragraph within a level, continue to pass down the parent node's
-                // number and heading until it reaches a text node where it gets displayed.
+                // number and heading until it reaches a text node where it gets displayed. But don't
+                // indent the text paragraph until we've discharged the parent level's heading.
                 var pni = parent_node_indents || 0;
                 if (i == 0 && parent_node_text) {
                     my_num_heading = parent_node_text.concat(my_num_heading);
                     pni += 1;
                 }
 
+                // Don't pass an empty array.
+                if (my_num_heading.length == 0) my_num_heading = null;
+
                 // The children at the top level are indentation zero, but inside that the
                 // indentation has to go up by 1.
-                flatten_body(child, paras, indentation == null ? 0 : indentation+1, my_num_heading, pni);
+                flatten_body(child, paras,
+                    indentation == null ? 0 : indentation+1,
+                    my_num_heading, pni,
+                    child_para_group);
             }
         });
 }

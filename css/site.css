@@ -47,3 +47,36 @@ footer {
     line-height: 37px;
 }
 
+.annotations {
+    margin: 1em 0;
+    padding: 1em 0;
+    border-top: 1px solid #ccc;
+    background: #eee;
+    color: #666;
+}
+
+.annotations .subheading {
+    font-size: 15px;
+    margin-bottom: 0;
+    line-height: 1.67em;
+    font-weight: bold
+}
+
+.annotations p {
+    margin-bottom: .5em;
+}
+
+.form, .table {
+    max-width: 50em;
+    margin: 1em;
+    padding: 1em;
+    border: 1px solid #ccc;
+    background: #eee;
+}
+.form p, .table p {
+    margin: 0;
+}
+
+.form p span, .table p span {
+    white-space: pre-wrap;
+}
