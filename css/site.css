@@ -1,0 +1,49 @@
+html, body {
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: rgba(67,127,190,1);
+    font-weight: bold;
+}
+
+a:hover {
+    color: rgba(42,65,150,1);
+}
+
+header {
+    background: #222;
+    padding: 10px;
+}
+
+header h1 {
+    margin: 0;
+    color: #fff;
+    font-size: 25px;
+}
+
+header a {
+    color: rgba(67,190,190,1);
+}
+
+
+footer {
+    border-top: 1px solid #ccc;
+    margin-top: 1em;
+    padding: 1em 10px;
+    font-size: 80%;
+    color: #444;
+}
+
+.content {
+    margin: 1em 0 1em 10px;
+}
+
+.content h1 {
+    border-bottom:1px solid #ccc;
+    margin-bottom:0;
+    line-height: 37px;
+}
+

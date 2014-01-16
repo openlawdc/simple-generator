@@ -50,7 +50,7 @@ function convert_file(file) {
     // Get the <text> and <level> nodes that make up the body
     // and flatten it out so the template doesn't have to deal with
     // the recursive nature of <level> nodes.
-    var body_paras= [];
+    var body_paras = [];
     flatten_body(dom, body_paras);
 
     // Find the ancestors of this file.
