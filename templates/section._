@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>
-            DC Code <%= title %>
+            DC Code - <%= title %>
         </title>
         <meta http-equiv='content-type' content='text/html; charset=utf-8' />
         <link rel='stylesheet' media='screen' type='text/css' href='/css/base.css' />

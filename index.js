@@ -83,7 +83,10 @@ function make_page_title(obj) {
 
     var title = null;
 
-    if (level_type == "Section") {
+    if (level_type == "document") {
+        // this is the root, just use the heading
+
+    } else if (level_type == "Section") {
         title = "§" + obj.find("num").text;
 
     } else if (level_type == "placeholder") {
