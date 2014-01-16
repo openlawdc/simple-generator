@@ -8,6 +8,7 @@ var finder = require('findit')(basedir),
 // map section numbers to filename
 
 var section_index = { };
+var section_parents = { };
 
 // scan code directory
 
@@ -22,22 +23,44 @@ function ondirectory(dir, stat, stop) {
 
 // functions
 
+function parse_xml_file(file) {
+    var xml = fs.readFileSync(file).toString(); // not sure why toSting is needed to make a string
+    return et.parse(xml)._root;
+}
+
 function onfile(file, stat) {
     // run a specific file by putting it on the command line
     if (file.match(/\.xml$/)) {
         // parse file
-        var xml = fs.readFileSync(file).toString();
-        dom = et.parse(xml)._root;
+        var dom = parse_xml_file(file);
         if (dom.tag != "level") return;
         
-        if (dom.find("type").text != "Section") return;
-        var fn = file.substring(basedir.length).replace(".xml", "");
-        var id = dom.find("num").text;
-        section_index[id] = fn;
+        // remember the file name for each section
+        var file_info = get_file_info(dom, file);
+        section_index[file_info[0]] = file_info[1];
+
+        // map children to parents
+        var children = dom.findall("ns0:include").forEach(function(node) {
+            var child_filename = path.dirname(file) + "/" + node.get('href');
+            var child_dom = parse_xml_file(child_filename);
+            var child_info = get_file_info(child_dom, child_filename);
+            section_parents[child_info[0]] = file_info[0];
+        });
     }
 }
 
+function get_file_info(dom, file) {
+    // this is duplicated in index.js
+    var fn = file.substring(basedir.length).replace(".xml", "");
+    var id;
+    if (dom.find("type").text == "Section")
+        id = dom.find("num").text;
+    else
+        id = fn;
+    return [id, fn];
+}
 
 function done() {
-    fs.writeFileSync(basedir + "section_index.js", JSON.stringify(section_index));
+    fs.writeFileSync(basedir + "section_index.json", JSON.stringify(section_index));
+    fs.writeFileSync(basedir + "section_parents_index.json", JSON.stringify(section_parents));
 }

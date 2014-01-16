@@ -12,7 +12,8 @@ var body_template = _.template(fs.readFileSync('templates/section._'));
 finder.on('directory', ondirectory)
     .on('file', onfile);
 
-var section_to_filename = JSON.parse(fs.readFileSync(basedir + '/section_index.js'));
+var section_to_filename = JSON.parse(fs.readFileSync(basedir + '/section_index.json'));
+var section_to_parent = JSON.parse(fs.readFileSync(basedir + '/section_parents_index.json'));
 
 function ondirectory(dir, stat, stop) {
     var base = path.basename(dir);
@@ -50,14 +51,27 @@ function convert_file(file) {
     var body_paras= [];
     flatten_body(dom, body_paras);
 
+    // Find the ancestors of this file.
+    var ancestors = [];
+    var parent_id = get_file_id(dom, file);
+    while (true) {
+        parent_id = section_to_parent[parent_id];
+        if (!parent_id) break;
+        var parent_file = section_to_filename[parent_id];
+        ancestors.push({
+            filename: "/" + basedir + "/" + parent_file +".html",
+            title: make_page_title(parse_xml_file(basedir + "/" + parent_file + ".xml"))
+        })
+    }
+    ancestors.reverse();
+
     // Write HTML.
     fs.writeFileSync(file.replace('.xml', '.html'),
         body_template({
-            cited: cited,
+            ancestors: ancestors,
             title: make_page_title(dom),
             body: body_paras,
             children: children,
-            is_index_file: file.match(/index.xml$/)
         }));
 }
 
@@ -238,4 +252,13 @@ function cited(text) {
         return linked('http://www.dcregs.dc.gov/Gateway/IssueList.aspx?IssueYear=' + year,
             cite.match);
     }
+}
+
+function get_file_id(dom, file) {
+    // this is duplicated in make_index.js, except for the +1 for a slash
+    var fn = file.substring(basedir.length+1).replace(".xml", "");
+    if (dom.find("type").text == "Section")
+        return dom.find("num").text;
+    else
+        return fn;
 }

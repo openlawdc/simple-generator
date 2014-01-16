@@ -13,14 +13,16 @@
                 <a href='/'>home</a>,
                 <a href='about.html'>about</a>
             </div>
+
+            <ul class="ancestors">
+            <% ancestors.forEach(function(s) { %>
+                <li><a href="<%= s.filename%>"><%= s.title%></a></li>
+            <% }); %>
+            </ul>
+
             <h1>
                 <%= title %>
             </h1>
-            <% if (is_index_file) { %>
-                <p><a href='../'>Up a Level</a></p>
-            <% } else { %>
-                <p><a href='index.html'>Up a Level</a></p>
-            <% } %>
         </header>
 
         <% body.forEach(function(l) { %>
