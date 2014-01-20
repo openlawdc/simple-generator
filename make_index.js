@@ -9,6 +9,7 @@ var finder = require('findit')(basedir),
 
 var section_index = { };
 var section_parents = { };
+var section_children = { };
 
 // scan code directory
 
@@ -39,12 +40,16 @@ function onfile(file, stat) {
         var file_info = get_file_info(dom, file);
         section_index[file_info[0]] = file_info[1];
 
+        // make an ordered list of children of each parent
+        section_children[file_info[0]] = [];
+
         // map children to parents
         var children = dom.findall("ns0:include").forEach(function(node) {
             var child_filename = path.dirname(file) + "/" + node.get('href');
             var child_dom = parse_xml_file(child_filename);
             var child_info = get_file_info(child_dom, child_filename);
             section_parents[child_info[0]] = file_info[0];
+            section_children[file_info[0]].push(child_info[0]);
         });
     }
 }
@@ -63,4 +68,5 @@ function get_file_info(dom, file) {
 function done() {
     fs.writeFileSync(basedir + "section_index.json", JSON.stringify(section_index));
     fs.writeFileSync(basedir + "section_parents_index.json", JSON.stringify(section_parents));
+    fs.writeFileSync(basedir + "section_children_index.json", JSON.stringify(section_children));
 }

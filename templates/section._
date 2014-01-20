@@ -65,9 +65,14 @@
                 <% }); %>
 
                 <% if (children) { %>
-                    <ul>
+                    <ul id="page_children">
                     <% children.forEach(function(s) { %>
-                        <li><a href="<%= s.filename%>"><%= s.title%></a></li>
+                        <li>
+                            <div class="title"><a href="<%= s.filename%>"><%= s.title%></a></div>
+                            <% if (s.section_range[0] && s.section_range[1]) { %>
+                                <div class="range">§§ <%- s.section_range[0] %> &ndash; <%- s.section_range[1] %></div>
+                            <% } %>
+                        </li>
                     <% }); %>
                     </ul>
                 <% } %>

@@ -16,6 +16,7 @@ finder.on('directory', ondirectory)
 
 var section_to_filename = JSON.parse(fs.readFileSync(basedir + '/section_index.json'));
 var section_to_parent = JSON.parse(fs.readFileSync(basedir + '/section_parents_index.json'));
+var section_to_children = JSON.parse(fs.readFileSync(basedir + '/section_children_index.json'));
 
 function ondirectory(dir, stat, stop) {
     var base = path.basename(dir);
@@ -42,9 +43,13 @@ function convert_file(file) {
 
     // Map xs:include's to information we need to make a link.
     var children = dom.findall("ns0:include").map(function(node) {
+        var fn = path.dirname(file) + "/" + node.get('href');
+        var dom = parse_xml_file(fn);
+        var child_id = get_file_id(dom, fn);
         return {
             filename: node.get('href').replace(".xml", ".html"),
-            title: make_page_title(parse_xml_file(path.dirname(file) + "/" + node.get('href')))
+            title: make_page_title(dom),
+            section_range: [get_section_range(child_id, 0), get_section_range(child_id, 1)]
         }; });
 
     // Get the <text> and <level> nodes that make up the body
@@ -298,4 +303,41 @@ function get_file_id(dom, file) {
         return dom.find("num").text;
     else
         return fn;
+}
+
+function get_section_range(id, start_or_end, depth) {
+    var children = section_to_children[id];
+
+    // base case has to be a Section or placeholder level... except in weird
+    // cases where a big level has no children.
+    if (!children || children.length == 0) {
+        if (!depth) {
+            // Don't return a range that's just the page itself.
+            return null;
+        }
+
+        var dom = parse_xml_file(basedir + "/" + section_to_filename[id] + ".xml");
+        if (dom.find("type").text == "Section") {
+            var num = dom.find("num").text;
+            return num;
+        }
+        if (dom.find("type").text == "placeholder") {
+            var level_section = dom.find("section");
+            var level_section_start = dom.find("section-start");
+            var level_section_end = dom.find("section-end");
+            if (level_section)
+                return level_section.text;
+            else
+                return start_or_end == 0 ? level_section_start.text : level_section_end.text;
+        }
+
+        // Weird case where a big level has no children.
+        var title = make_page_title(dom);
+        return title;
+    }
+
+    return get_section_range(
+        children[start_or_end == 0 ? 0 : children.length-1],
+        start_or_end,
+        (depth||0)+1);
 }

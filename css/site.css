@@ -123,3 +123,10 @@ footer p {
 .form p span, .table p span {
     white-space: pre-wrap;
 }
+
+#page_children .range {
+    font-size: 80%;
+    color: #444;
+    margin-left: 2em;
+    margin-bottom: 4px;
+}
