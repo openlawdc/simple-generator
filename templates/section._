@@ -42,6 +42,16 @@
                     </ul>
                 <% } %>
 
+                <% if (sibling_previous) { %>
+                    <h2>Previous Section</h2>
+                    <p><a href="<%= sibling_previous.filename%>"><%- sibling_previous.title %></a>
+                <% } %>
+
+                <% if (sibling_next) { %>
+                    <h2>Next Section</h2>
+                    <p><a href="<%= sibling_next.filename%>"><%- sibling_next.title %></a>
+                <% } %>
+
                 <h2>Status of This Page</h2>
                 <p class="recency"><%- recency_info %></p>
 

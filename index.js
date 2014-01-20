@@ -92,6 +92,8 @@ function convert_file(file) {
     fs.writeFileSync(file.replace('.xml', '.html'),
         body_template({
             ancestors: ancestors,
+            sibling_previous: make_page_link(get_sibling(page_id, -1)),
+            sibling_next: make_page_link(get_sibling(page_id, +1)),
             title: make_page_title(dom),
             body: body_groups,
             children: children,
@@ -340,4 +342,27 @@ function get_section_range(id, start_or_end, depth) {
         children[start_or_end == 0 ? 0 : children.length-1],
         start_or_end,
         (depth||0)+1);
+}
+
+function get_sibling(id, direction) {
+    if (!(id in section_to_parent)) return null;
+
+    var parent = section_to_parent[id];
+    if (!(parent in section_to_children)) return null;
+
+    var seen_me = false;
+    var sibling = null;
+    section_to_children[parent].forEach(function(child_id) {
+        if (seen_me && direction == 1 && !sibling)
+            sibling = child_id;
+
+        if (child_id == id) seen_me = true;
+
+        if (!seen_me && direction == -1)
+            sibling = child_id;
+    });
+
+    if (!sibling) sibling = get_sibling(parent, direction);
+    
+    return sibling;
 }
