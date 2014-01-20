@@ -32,7 +32,7 @@
             <div class="clearfix" style="width: 100%;">
 
             <div id="sidebar" class="col4">
-                <% if (ancestors.length > 1) { %>
+                <% if (ancestors.length > 0) { %>
                     <h2>You Are Here</h2>
                     <ul class="ancestors">
                     <% ancestors.forEach(function(s, i) { %>
