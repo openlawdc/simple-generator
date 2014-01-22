@@ -28,7 +28,7 @@ node index.js code
 Or just specific files (pass a regular expression):
 
 ```
-node index.js code code/Division-I/Title-2/Chapter-17/2-1713.json
+node index.js code code/Division-I/Title-2/Chapter-17/2-1713.xml
 ```
 
 [Then set up a testing server](https://gist.github.com/tmcw/4989751) like
