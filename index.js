@@ -247,9 +247,10 @@ function cited(text) {
             }
         },
         excerpt: 40,
-        types: ['dc_code', 'dc_register', 'law', 'stat'],
+        types: ['dc_code', 'dc_law', 'dc_register', 'law', 'stat'],
         replace: {
             dc_code: codeCited,
+            dc_law:dclawCited,
             law: lawCited,
             dc_register: dcrCited,
             stat: statCited
@@ -279,6 +280,21 @@ function cited(text) {
 
         return linked("/" + basedir + "/" + section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section] + '.html',
             cite.match);
+    }
+
+    // Take advantage of the new openlims feature of DC Laws
+    function dclawCited(cite) {
+
+        //Use this logic until @vzvenyach fixes the naming convention in S3...
+        if (cite.dc_law.period > 8) {
+            var lawName = 'L' + cite.dc_law.period + "-" + cite.dc_law.number + '.pdf';
+        }
+        else {
+            var lawName = cite.dc_law.period + "-" + cite.dc_law.number + '.PDF';
+        }
+
+        var url = 'http://openlims.org/public/' + lawName;
+        return linked(url, cite.match);
     }
 
     function lawCited(cite) {
