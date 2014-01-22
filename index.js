@@ -286,7 +286,7 @@ function cited(text) {
     function dclawCited(cite) {
 
         //Use this logic until @vzvenyach fixes the naming convention in S3...
-        if (cite.dc_law.period > 8) {
+        if (cite.dc_law.period > 7) {
             var lawName = 'L' + cite.dc_law.period + "-" + cite.dc_law.number + '.pdf';
         }
         else {
