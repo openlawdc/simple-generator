@@ -285,14 +285,7 @@ function cited(text) {
     // Take advantage of the new openlims feature of DC Laws
     function dclawCited(cite) {
 
-        //Use this logic until @vzvenyach fixes the naming convention in S3...
-        if (cite.dc_law.period > 7) {
-            var lawName = 'L' + cite.dc_law.period + "-" + cite.dc_law.number + '.pdf';
-        }
-        else {
-            var lawName = cite.dc_law.period + "-" + cite.dc_law.number + '.PDF';
-        }
-
+        var lawName = 'L' + cite.dc_law.period + "-" + cite.dc_law.number + '.pdf';
         var url = 'http://openlims.org/public/' + lawName;
         return linked(url, cite.match);
     }
