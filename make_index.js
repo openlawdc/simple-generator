@@ -60,6 +60,9 @@ function get_file_info(dom, file) {
     var id;
     if (dom.find("type").text == "Section")
         id = dom.find("num").text;
+    else if (dom.find("type").text == "placeholder" && dom.find("section"))
+        id = dom.find("section").text;
+    // TODO: What happens if there's a link to a section in a placeholder page that has a range of sections?
     else
         id = fn;
     return [id, fn];

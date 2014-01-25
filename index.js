@@ -377,7 +377,10 @@ function cited(text) {
         if (index >= 0 && index < 40) // found, and to the left of the cite
             return;
 
-        return linked("/" + basedir + "/" + section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section] + '.html',
+        var fn = section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section];
+        if (!fn) return; // section not actually in the code?
+
+        return linked("/" + basedir + "/" + fn + '.html',
             cite.match);
     }
 
@@ -412,6 +415,9 @@ function get_file_id(dom, file) {
     var fn = file.substring(basedir.length+1).replace(".xml", "");
     if (dom.find("type").text == "Section")
         return dom.find("num").text;
+    else if (dom.find("type").text == "placeholder" && dom.find("section"))
+        return dom.find("section").text;
+    // TODO: What happens if there's a link to a section in a placeholder page that has a range of sections?
     else
         return fn;
 }
