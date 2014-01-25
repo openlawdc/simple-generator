@@ -77,7 +77,7 @@
                 <% if (children) { %>
                     <ul id="page_children">
                     <% children.forEach(function(s) { %>
-                        <li>
+                        <li <% if (s.is_placeholder) { %>class="placeholder"<% } %>>
                             <div class="title"><a href="<%= s.filename%>"><%= s.title%></a></div>
                             <% if (s.section_range[0] && s.section_range[1]) { %>
                                 <div class="range">§§ <%- s.section_range[0] %> &ndash; <%- s.section_range[1] %></div>

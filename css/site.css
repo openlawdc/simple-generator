@@ -131,6 +131,13 @@ footer p {
     white-space: pre-wrap;
 }
 
+#page_children .placeholder a {
+    color: rgba(90,160,190,.9);
+}
+#page_children .placeholder .range {
+    color: #777;
+}
+
 #page_children .range {
     font-size: 80%;
     color: #444;

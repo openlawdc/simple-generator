@@ -51,9 +51,11 @@ function convert_file(file) {
         var fn = path.dirname(file) + "/" + node.get('href');
         var dom = parse_xml_file(fn);
         var child_id = get_file_id(dom, fn);
+        var title = make_page_title(dom);
         return {
             filename: node.get('href').replace(".xml", ".html"),
-            title: make_page_title(dom),
+            title: title,
+            is_placeholder: dom.find("type").text == "placeholder" || (title.indexOf("[Repealed]") >= 0),
             section_range: [get_section_range(child_id, 0), get_section_range(child_id, 1)]
         }; });
 
