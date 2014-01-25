@@ -340,6 +340,9 @@ function cited(text) {
         context: {
             dc_code: {
                 source: 'dc_code'
+            },
+            dc_law: {
+                source: 'dc_code'
             }
         },
         excerpt: 40,
