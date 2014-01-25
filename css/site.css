@@ -6,6 +6,7 @@ html, body {
 
 a {
     color: rgba(67,127,190,1);
+    text-decoration: underline;
 }
 
 a:hover {
