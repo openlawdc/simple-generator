@@ -1,3 +1,7 @@
+/* force a vertical scrollbar on all pages so that we don't get horizontal jumps
+   when navigating from a no-scrollbar to a with-scrollbar page and vice versa */
+html{overflow-y:scroll}
+
 html, body {
     font-family: 'Open Sans', sans-serif;
     margin: 0;
