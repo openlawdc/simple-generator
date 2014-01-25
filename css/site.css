@@ -53,8 +53,8 @@ footer p {
 }
 
 #sidebar {
-    padding-right: 50px;
-    font-size: 12px;
+    padding: 0 50px 0 1em;
+    font-size: 13px;
 }
 
     #sidebar h2 {
@@ -64,6 +64,7 @@ footer p {
     }
 
 #content {
+    font-size: 16px;
 }
 
     #content h1 {
@@ -73,6 +74,9 @@ footer p {
     }
 
     #content p {
+        /* right padding is added here and not at #content so that the gray
+           background on .annotations stretches the full width */
+        padding-right: 1.5em;
     }
 
     #content p.has-level-num {
@@ -146,4 +150,13 @@ footer p {
     font-size: 80%;
     color: #444;
     margin-bottom: 5px;
+}
+
+@media (max-width: 780px) {
+    #sidebar {
+        font-size: 11px;
+    }
+    #content {
+        font-size: 14px;
+    }
 }
