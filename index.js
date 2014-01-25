@@ -370,8 +370,8 @@ function cited(text) {
     // is this a current DC Code cite (something we should cross-link),
     // or is it to a prior version of the DC Code?
     function codeCited(cite) {
-        var index = cite.excerpt.search(/ior\s+codifications\s+1981\s+Ed\.?\,?/i);
-        if (index > 0 && index < 40) // found, and to the left of the cite
+        var index = cite.excerpt.search(/Pior\s+codifications\s+\d{4}\s+Ed\.?\,?|\d{4} Ed\., /i);
+        if (index >= 0 && index < 40) // found, and to the left of the cite
             return;
 
         return linked("/" + basedir + "/" + section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section] + '.html',
