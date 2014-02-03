@@ -17,14 +17,49 @@
         <link rel='stylesheet' type='text/css' href='/css/site.css' media='screen' />
         <link rel='stylesheet' type='text/css' href='/css/print.css' media='print' />
         <link rel='stylesheet' type='text/css' href='/css/icons/style.css' media='screen' />
+
+        <script>
+            function search_box_submit() {
+                event.preventDefault();
+                var elem = document.getElementById("search-box")
+                var val = elem.value;
+                if (val.length == 0) return false;
+
+                val = val.replace("§", "").replace(" ", "");
+                var p = val.indexOf("-");
+                if (p == -1) {
+                    alert("Search by citation, such as §50-102.");
+                    return false;
+                }
+
+                title = val.substring(0, p);
+                sec = val.substring(p+1);
+
+                var oReq = new XMLHttpRequest();
+                oReq.onload = function() {
+                    var title_shard = JSON.parse(this.responseText);
+                    if (!(sec in title_shard["sec"])) {
+                        alert("Citation not found.")
+                        return false;
+                    }
+                    window.location = "/" + title_shard["sec"][sec].replace(".xml", ".html");
+                };
+                oReq.open("get", "/<%- basedir %>/by_title/" + title + ".json", true);
+                oReq.send();
+
+                return false;
+            }
+        </script>
     </head>
     <body>
         <div class="container">
 
             <header>
                 <div class='right'>
-                    <a href='/'>home</a>
-                    <a href='/about.html'>about</a>
+                    <form onsubmit="return search_box_submit()">
+                        <input id="search-box" type="text" placeholder="15-101" style="width: 100px"/>
+                        <button style="height: 30px; font-size: 22px;" onclick="search_box_submit()"><span class="icon-search"/></button>
+                    </form>
                 </div>
                 <p id="sitename">Code of the District of Columbia (Unofficial)</p>
             </header>

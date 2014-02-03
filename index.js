@@ -55,6 +55,7 @@ function convert_file(file) {
     // Write HTML.
     fs.writeFileSync(file.replace('.xml', '.html'),
         page_template({
+            basedir: basedir,
             ancestors: ancestors,
             sibling_previous: make_page_link(get_sibling(page_id, -1)),
             sibling_next: make_page_link(get_sibling(page_id, +1)),
