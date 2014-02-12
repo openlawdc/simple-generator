@@ -139,14 +139,18 @@ footer p {
     white-space: pre-wrap;
 }
 
-#page_children .placeholder a {
+.subheading {
+    margin: 1em 0;
+}
+
+.child-link.placeholder a {
     color: rgba(90,160,190,.9);
 }
-#page_children .placeholder .range {
+.child-link.placeholder .range {
     color: #777;
 }
 
-#page_children .range {
+.child-link .range {
     font-size: 80%;
     color: #444;
     margin-bottom: 5px;

@@ -15,6 +15,7 @@ exports.parse_xml_file = function(file) {
 exports.get_file_id = function(dom, file, basedir) {
     // Gets the "id" of a file, which is how it appears in the pre-made index files.
     // (this is duplicated in make_index.js, except for the +1 for a slash)
+    if (basedir.charAt(basedir.length-1) == "/") basedir = basedir.substring(0, basedir.length-1); // chop trailing slash
     var fn = file.substring(basedir.length+1).replace(".xml", "");
     if (dom.find("type").text == "Section")
         return dom.find("num").text;
@@ -95,7 +96,7 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
     // and flatten them out so the template doesn't have to deal with
     // the recursive nature of <level> nodes.
     var body_paras = [];
-    flatten_body(dom, body_paras, section_to_filename, basedir);
+    flatten_body(dom, body_paras, section_to_filename, section_to_children, basedir, filename);
 
     // Set the 'has-level-num' class on paragraphs with a level-num span
     // so that the CSS can take care of the un-indentation needed to get
@@ -117,28 +118,13 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
         body_groups[body_groups.length-1].paras.push(para);
     });
 
-    // Make links to the child levels from this page (i.e. moving down in the table of contents).
-    // Map xs:include's to information we need to make a link.
-    var children = dom.findall("ns0:include").map(function(node) {
-        var fn = path.dirname(filename) + "/" + node.get('href');
-        var dom = exports.parse_xml_file(fn);
-        var child_id = exports.get_file_id(dom, fn, basedir);
-        var title = exports.make_page_title(dom);
-        return {
-            filename: node.get('href').replace(".xml", ".html"),
-            title: title,
-            is_placeholder: dom.find("type").text == "placeholder" || (title.indexOf("[Repealed]") >= 0),
-            section_range: [get_section_range(child_id, 0, section_to_filename, section_to_children, basedir), get_section_range(child_id, 1, section_to_filename, section_to_children, basedir)]
-        }; });
-
     return {
         title: exports.make_page_title(dom),
         body: body_groups,
-        children: children,
     }
 }
 
-flatten_body = function(node, paras, section_to_filename, basedir, indentation, parent_node_text, parent_node_indents, para_group) {
+function flatten_body(node, paras, section_to_filename, section_to_children, basedir, filename, indentation, parent_node_text, parent_node_indents, para_group) {
     /* This function flattens the recursive nesting of <level> and <text> nodes that make up
        the body content of a page. Each call fills node's paragraphs into the 'paras' argument.
 
@@ -194,7 +180,7 @@ flatten_body = function(node, paras, section_to_filename, basedir, indentation, 
         */
 
     node.getchildren()
-        .filter(function(node) { return node.tag == "text" || node.tag == "level" })
+        .filter(function(node) { return node.tag == "text" || node.tag == "level" || node.tag == "ns0:include" })
         .forEach(function(child, i) {
             if (child.tag == "text") {
                 // Create a paragraph object and add it to 'paras'.
@@ -229,15 +215,27 @@ flatten_body = function(node, paras, section_to_filename, basedir, indentation, 
                 // then pass that group information down into all child paragraphs here.
                 var child_para_group = para_group;
                 var type = child.find("type");
+                var is_special_type = false;
                 if (type && ["annotations", "appendices", "form", "table"].indexOf(type.text) >= 0) {
                     child_para_group = type.text;
+                    is_special_type = true;
                 }
 
                 // Don't display the level's num and heading here but rather on the first
                 // paragraph within the level.
                 var my_num_heading = [];
-                if (child.find("num")) my_num_heading.push( { text: child.find("num").text + " ", class: "level-num" } );
-                if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + (child_para_group ? "" : " — "), class: "level-heading" } );
+                if (!child.find("type") || is_special_type) {
+                    if (child.find("num")) my_num_heading.push( { text: child.find("num").text + " ", class: "level-num" } );
+                    if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + (child_para_group ? "" : " — "), class: "level-heading" } );
+                } else {
+                    // This might be a big level like a Division. Don't use the level-num class,
+                    // because the indentation CSS only works for bullet-like numbering.
+                    var heading = "";
+                    if (child.find("type")) heading = child.find("type").text + " ";
+                    if (child.find("num")) heading += child.find("num").text + ". ";
+                    if (child.find("heading")) heading += child.find("heading").text;
+                    my_num_heading.push( { text: heading, class: "level-heading" } );
+                }
 
                 // If we're the first paragraph within a level, continue to pass down the parent node's
                 // number and heading until it reaches a text node where it gets displayed. But don't
@@ -253,11 +251,38 @@ flatten_body = function(node, paras, section_to_filename, basedir, indentation, 
 
                 // The children at the top level are indentation zero, but inside that the
                 // indentation has to go up by 1.
-                flatten_body(child, paras, section_to_filename, basedir,
+                flatten_body(child, paras, section_to_filename, section_to_children, basedir, filename,
                     indentation == null ? 0 : indentation+1,
                     my_num_heading, pni,
                     child_para_group);
+
+
+            } else if (child.tag == "ns0:include") {
+                // This is an XInclude tag that references a child that should be linked from here.
+
+                // We may have heading text from a higher level to display.
+                if (i == 0 && parent_node_text) {
+                    paras.push({ text: parent_node_text, indentation: indentation||0, class: "subheading", group: para_group });
+                }
+
+                // Append a paragraph for the XInclude.
+                var fn = path.dirname(filename) + "/" + child.get('href');
+                var dom = exports.parse_xml_file(fn);
+                var child_id = exports.get_file_id(dom, fn, basedir);
+                var title = exports.make_page_title(dom);
+                paras.push({
+                    group: "",
+                    indentation: (indentation||0),
+                    class: "child-link",
+                    text: [],
+
+                    filename: child.get('href').replace(".xml", ".html"),
+                    title: title,
+                    is_placeholder: dom.find("type").text == "placeholder" || (title.indexOf("[Repealed]") >= 0),
+                    section_range: [get_section_range(child_id, 0, section_to_filename, section_to_children, basedir), get_section_range(child_id, 1, section_to_filename, section_to_children, basedir)]
+                });
             }
+
         });
 }
 

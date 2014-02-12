@@ -1,26 +1,23 @@
 <h1><%= title %></h1>
 
 <% body.forEach(function(group) { %>
-    <div class="<%= group.group %>">
+    <% if (group.group) { %><div class="<%= group.group %>"><% } %> <% // prevent p:last-child { margin-bottom: 0; } from applying by not wraping the p's in unnecessary divs %>
+
     <% group.paras.forEach(function(l) { %>
-        <p class="<%= l.class %>" style="padding-left: <%= l.indentation*30 %>px">
-            <% l.text.forEach(function(span) { %>
-                <span class="<%- span.class %>" style="<%- span.style %>"><%= span.text %></span>
-            <% }); %>
+        <p class="<%= l.class %> <% if (l.is_placeholder) { %>placeholder<% } %>" style="padding-left: <%= l.indentation*30 %>px">
+            <% if (l.class == "child-link") { %>
+                <span class="title"><a href="<%= l.filename%>"><%= l.title%></a></span>
+                <% if (l.section_range[0] && l.section_range[1]) { %>
+                    <br><span class="range">§§ <%- l.section_range[0] %> &ndash; <%- l.section_range[1] %></span>
+                <% } %>
+            <% } else {%>
+                <% l.text.forEach(function(span) { %>
+                    <span class="<%- span.class %>" style="<%- span.style %>"><%= span.text %></span>
+                <% }); %>
+            <% } %>
         </p>
     <% }); %>
-    </div>
+
+    <% if (group.group) { %></div><% } %>
 <% }); %>
 
-<% if (children) { %>
-    <ul id="page_children">
-    <% children.forEach(function(s) { %>
-        <li <% if (s.is_placeholder) { %>class="placeholder"<% } %>>
-            <div class="title"><a href="<%= s.filename%>"><%= s.title%></a></div>
-            <% if (s.section_range[0] && s.section_range[1]) { %>
-                <div class="range">§§ <%- s.section_range[0] %> &ndash; <%- s.section_range[1] %></div>
-            <% } %>
-        </li>
-    <% }); %>
-    </ul>
-<% } %>
