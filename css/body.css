@@ -1,0 +1,88 @@
+    #content h1 {
+        margin: 20px 0 30px 0;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    #content p {
+        /* right padding is added here and not at #content so that the gray
+           background on .annotations stretches the full width */
+        padding-right: 1.5em;
+    }
+
+    #content p.has-level-num {
+        margin-left: 30px;
+    }
+
+    #content .level-num {
+        font-weight: bold;
+        color: #666;
+    }
+    
+    /* paragraphs can have multiple numbers when there are nested levels without intermediate 
+       text, e.g. (3) (A) Blah blah. Only reverse-indent the first, otherwise the floats land
+       on top of each other. */
+    #content .level-num:first-child {
+        display: block;
+        float: left;
+        width: 100px;
+        margin-left: -100px;
+        padding-right: .5em;
+        text-align: right;
+    }
+
+    #content .level-heading {
+        font-weight: bold;
+        color: #666;
+    }
+
+.annotations {
+    margin: 1em 0;
+    padding: 1em 0;
+    border-top: 1px solid #ccc;
+    background: #eee;
+    color: #666;
+}
+
+.annotations .subheading {
+    font-size: 15px;
+    margin-bottom: 0;
+    line-height: 1.67em;
+    font-weight: bold
+}
+
+.annotations p {
+    margin-bottom: .5em;
+}
+
+.form, .table {
+    max-width: 50em;
+    margin: 1em;
+    padding: 1em;
+    border: 1px solid #ccc;
+    background: #eee;
+}
+.form p, .table p {
+    margin: 0;
+}
+
+.form p span, .table p span {
+    white-space: pre-wrap;
+}
+
+.subheading {
+    margin: 1em 0;
+}
+
+.child-link.placeholder a {
+    color: rgba(90,160,190,.9);
+}
+.child-link.placeholder .range {
+    color: #777;
+}
+
+.child-link .range {
+    font-size: 80%;
+    color: #444;
+    margin-bottom: 5px;
+}
