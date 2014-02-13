@@ -96,7 +96,12 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
     // and flatten them out so the template doesn't have to deal with
     // the recursive nature of <level> nodes.
     var body_paras = [];
-    flatten_body(dom, body_paras, section_to_filename, section_to_children, basedir, filename);
+    flatten_body(dom, {
+        paras: body_paras,
+        section_to_filename: section_to_filename,
+        section_to_children: section_to_children,
+        basedir: basedir,
+        filename: filename});
 
     // Set the 'has-level-num' class on paragraphs with a level-num span
     // so that the CSS can take care of the un-indentation needed to get
@@ -124,9 +129,9 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
     }
 }
 
-function flatten_body(node, paras, section_to_filename, section_to_children, basedir, filename, indentation, parent_node_text, parent_node_indents, para_group) {
+function flatten_body(node, flatten_args, indentation, parent_node_text, parent_node_indents, para_group) {
     /* This function flattens the recursive nesting of <level> and <text> nodes that make up
-       the body content of a page. Each call fills node's paragraphs into the 'paras' argument.
+       the body content of a page. Each call fills node's paragraphs into the 'flatten_args.paras' argument.
 
        As we descend into the hierarchy, 'indentation' is incremented by one. The top-level call
        doesn't pass indentation or further arguments, so it comes in first as undefined, which is
@@ -183,7 +188,7 @@ function flatten_body(node, paras, section_to_filename, section_to_children, bas
         .filter(function(node) { return node.tag == "text" || node.tag == "level" || node.tag == "ns0:include" })
         .forEach(function(child, i) {
             if (child.tag == "text") {
-                // Create a paragraph object and add it to 'paras'.
+                // Create a paragraph object and add it to 'flatten_args.paras'.
 
                 // Check if we have any numbering or headings
                 var initial_text = [];
@@ -194,7 +199,7 @@ function flatten_body(node, paras, section_to_filename, section_to_children, bas
                         // if there is any numbering or heading text coming from a parent level
                         // don't display it inline in this paragraph. Make a separate heading
                         // for it.
-                        paras.push({ text: parent_node_text, indentation: indentation, class: "subheading", group: para_group });
+                        flatten_args.paras.push({ text: parent_node_text, indentation: indentation, class: "subheading", group: para_group });
                     } else {
                         // This is the first paragraph within a level and we have a number or
                         // heading from its parent to display. Put the parent number and heading here.
@@ -205,10 +210,10 @@ function flatten_body(node, paras, section_to_filename, section_to_children, bas
 
                 // Flatten the text of the child, which takes care of turning mixed-content
                 // text like "lorem<span>ipsum</span> dolor" into a flat array of objects.
-                var child_text = flatten_text(child, section_to_filename, basedir);
+                var child_text = flatten_text(child, flatten_args);
 
                 // Append the paragraph.
-                paras.push({ text: initial_text.concat(child_text), indentation: my_indentation, group: para_group, class: "" });
+                flatten_args.paras.push({ text: initial_text.concat(child_text), indentation: my_indentation, group: para_group, class: "" });
 
             } else if (child.tag == "level") {
                 // What group will we pass down into the child? If this level is of a certain type,
@@ -251,7 +256,7 @@ function flatten_body(node, paras, section_to_filename, section_to_children, bas
 
                 // The children at the top level are indentation zero, but inside that the
                 // indentation has to go up by 1.
-                flatten_body(child, paras, section_to_filename, section_to_children, basedir, filename,
+                flatten_body(child, flatten_args,
                     indentation == null ? 0 : indentation+1,
                     my_num_heading, pni,
                     child_para_group);
@@ -262,15 +267,15 @@ function flatten_body(node, paras, section_to_filename, section_to_children, bas
 
                 // We may have heading text from a higher level to display.
                 if (i == 0 && parent_node_text) {
-                    paras.push({ text: parent_node_text, indentation: indentation||0, class: "subheading", group: para_group });
+                    flatten_args.paras.push({ text: parent_node_text, indentation: indentation||0, class: "subheading", group: para_group });
                 }
 
                 // Append a paragraph for the XInclude.
-                var fn = path.dirname(filename) + "/" + child.get('href');
+                var fn = path.dirname(flatten_args.filename) + "/" + child.get('href');
                 var dom = exports.parse_xml_file(fn);
-                var child_id = exports.get_file_id(dom, fn, basedir);
+                var child_id = exports.get_file_id(dom, fn, flatten_args.basedir);
                 var title = exports.make_page_title(dom);
-                paras.push({
+                flatten_args.paras.push({
                     group: "",
                     indentation: (indentation||0),
                     class: "child-link",
@@ -279,14 +284,14 @@ function flatten_body(node, paras, section_to_filename, section_to_children, bas
                     filename: child.get('href').replace(".xml", ".html"),
                     title: title,
                     is_placeholder: dom.find("type").text == "placeholder" || (title.indexOf("[Repealed]") >= 0),
-                    section_range: [get_section_range(child_id, 0, section_to_filename, section_to_children, basedir), get_section_range(child_id, 1, section_to_filename, section_to_children, basedir)]
+                    section_range: [get_section_range(child_id, 0, flatten_args), get_section_range(child_id, 1, flatten_args)]
                 });
             }
 
         });
 }
 
-function flatten_text(node, section_to_filename, basedir) {
+function flatten_text(node, flatten_args) {
     /* Turns mixed content <text> nodes into a flat array of text with styling information.
        For example:
           lorem<span style="xyz">ipsum</span>
@@ -296,7 +301,7 @@ function flatten_text(node, section_to_filename, basedir) {
     */
 
     function link_citations(text) {
-        return cited(text, section_to_filename, basedir);
+        return cited(text, flatten_args);
     }
 
     var ret = [];
@@ -309,7 +314,7 @@ function flatten_text(node, section_to_filename, basedir) {
     return ret;
 }
 
-function cited(text, section_to_filename, basedir) {
+function cited(text, flatten_args) {
     /* Add links to any recognized citations. */
 
     // HTML-escape the content first because we'll be adding raw HTML for the links.
@@ -366,10 +371,10 @@ function cited(text, section_to_filename, basedir) {
         if (index >= 0 && index < 40) // found, and to the left of the cite
             return;
 
-        var fn = section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section];
+        var fn = flatten_args.section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section];
         if (!fn) return; // section not actually in the code?
 
-        return linked("/" + basedir + "/" + fn + '.html',
+        return linked("/" + flatten_args.basedir + "/" + fn + '.html',
             cite.match);
     }
 
@@ -398,11 +403,11 @@ function cited(text, section_to_filename, basedir) {
     }
 }
 
-function get_section_range(id, start_or_end, section_to_filename, section_to_children, basedir, depth) {
+function get_section_range(id, start_or_end, flatten_args, depth) {
     /* Gets the first (start_or_end=0) or last (start_or_end=1) section number
        of all descendants of this page in the code. */
 
-    var children = section_to_children[id];
+    var children = flatten_args.section_to_children[id];
 
     // base case has to be a Section or placeholder level... except in weird
     // cases where a big level has no children.
@@ -413,7 +418,7 @@ function get_section_range(id, start_or_end, section_to_filename, section_to_chi
         }
 
         // Parse the XML of the child.
-        var dom = exports.parse_xml_file(basedir + "/" + section_to_filename[id] + ".xml");
+        var dom = exports.parse_xml_file(flatten_args.basedir + "/" + flatten_args.section_to_filename[id] + ".xml");
 
         // For sections, return just the section number. Omit the section symbol
         // because that's handled in the template.
@@ -449,9 +454,7 @@ function get_section_range(id, start_or_end, section_to_filename, section_to_chi
     return get_section_range(
         children[start_or_end == 0 ? 0 : children.length-1],
         start_or_end,
-        section_to_filename,
-        section_to_children,
-        basedir,
+        flatten_args,
         (depth||0)+1
         );
 }
