@@ -7,10 +7,6 @@ var fs = require('fs');
 var et = require('elementtree');
 var render_body = require('./render_body.js');
 
-var basedir = process.argv[2] || 'code';
-var section_to_filename = JSON.parse(fs.readFileSync(basedir + '/section_index.json'));
-var section_to_children = JSON.parse(fs.readFileSync(basedir + '/section_children_index.json'));
-
 http.createServer(function (req, res) {
   var incoming_xml = "";
   req.on('data', function(chunk) {
@@ -28,7 +24,7 @@ http.createServer(function (req, res) {
 
     var body;
     try {
-	    body = render_body.render_body("file.html", dom, section_to_filename, section_to_children, basedir);
+	    body = render_body.render_body("file.html", dom, null, null, null);
     } catch (e) {
       res.writeHead(400, {'Content-Type': 'application/json'});
       res.write(JSON.stringify( { "error": "Something is wrong in the code: " + e } ));

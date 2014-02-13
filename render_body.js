@@ -270,6 +270,11 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                     flatten_args.paras.push({ text: parent_node_text, indentation: indentation||0, class: "subheading", group: para_group });
                 }
 
+                if (!flatten_args.basedir) {
+                    flatten_args.paras.push({ text: [{ text: "[link to child page cannot be rendered]", class: "" }], indentation: indentation||0, class: "", group: para_group });
+                    return;
+                }
+
                 // Append a paragraph for the XInclude.
                 var fn = path.dirname(flatten_args.filename) + "/" + child.get('href');
                 var dom = exports.parse_xml_file(fn);
@@ -371,6 +376,9 @@ function cited(text, flatten_args) {
         if (index >= 0 && index < 40) // found, and to the left of the cite
             return;
 
+        if (!flatten_args.section_to_filename)
+            return linked("javascript:no_linking()", cite.match);
+
         var fn = flatten_args.section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section];
         if (!fn) return; // section not actually in the code?
 
@@ -406,6 +414,9 @@ function cited(text, flatten_args) {
 function get_section_range(id, start_or_end, flatten_args, depth) {
     /* Gets the first (start_or_end=0) or last (start_or_end=1) section number
        of all descendants of this page in the code. */
+
+    if (!flatten_args.section_to_filename || !flatten_args.section_to_children)
+        return null;
 
     var children = flatten_args.section_to_children[id];
 
