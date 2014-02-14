@@ -15,6 +15,7 @@
         <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,700' rel='stylesheet' type='text/css'>
         <link rel='stylesheet' type='text/css' href='/css/reset.css' media='screen' />
         <link rel='stylesheet' type='text/css' href='/css/site.css' media='screen' />
+        <link rel='stylesheet' type='text/css' href='/css/body.css' media='screen' />
         <link rel='stylesheet' type='text/css' href='/css/print.css' media='print' />
         <link rel='stylesheet' type='text/css' href='/css/icons/style.css' media='screen' />
 
