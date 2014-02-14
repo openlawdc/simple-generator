@@ -85,13 +85,13 @@ exports.make_page_title = function(obj) {
     return title;
 }
 
-exports.render_body = function(filename, dom, section_to_filename, section_to_children, basedir) {
-    body_info = exports.process_body(filename, dom, section_to_filename, section_to_children, basedir);
+exports.render_body = function(filename, dom, section_to_filename, section_to_children, basedir, rootdir) {
+    body_info = exports.process_body(filename, dom, section_to_filename, section_to_children, basedir, rootdir);
     body_info.rendered = body_template(body_info);
     return body_info;
 }
 
-exports.process_body = function(filename, dom, section_to_filename, section_to_children, basedir) {
+exports.process_body = function(filename, dom, section_to_filename, section_to_children, basedir, rootdir) {
     // Get the <text> and <level> nodes that make up the body
     // and flatten them out so the template doesn't have to deal with
     // the recursive nature of <level> nodes.
@@ -101,6 +101,7 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
         section_to_filename: section_to_filename,
         section_to_children: section_to_children,
         basedir: basedir,
+	rootdir: rootdir,
         filename: filename});
 
     // Set the 'has-level-num' class on paragraphs with a level-num span
@@ -382,7 +383,7 @@ function cited(text, flatten_args) {
         var fn = flatten_args.section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section];
         if (!fn) return; // section not actually in the code?
 
-        return linked("/" + flatten_args.basedir + "/" + fn + '.html',
+        return linked(flatten_args.rootdir + "/" + fn + '.html',
             cite.match);
     }
 

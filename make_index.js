@@ -55,7 +55,7 @@ function onfile(file, stat) {
         });
 
         // make an index for handling searching by citation in the UI
-        add_to_title_shard(file, dom);
+        add_to_title_shard(file.substring(basedir.length), dom);
     }
 }
 

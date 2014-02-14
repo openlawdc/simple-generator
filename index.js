@@ -1,4 +1,5 @@
 var basedir = process.argv[2] || '.';
+var rootdir = process.argv[3] || '';
 
 var finder = require('findit')(basedir),
     path = require('path'),
@@ -23,7 +24,7 @@ function ondirectory(dir, stat, stop) {
 }
 function onfile(file, stat) {
     // run a specific file by putting it on the command line
-    if (process.argv.length > 3 && !file.match(process.argv[3])) return;
+    if (process.argv.length > 4 && !file.match(process.argv[4])) return;
     if (file.match(/\.xml$/))
         convert_file(file);
 }
@@ -38,7 +39,7 @@ function convert_file(file) {
     var dom = render_body.parse_xml_file(file);
     if (dom.tag != "level") return;
 
-    var rendered_body = render_body.render_body(file, dom, section_to_filename, section_to_children, basedir);
+    var rendered_body = render_body.render_body(file, dom, section_to_filename, section_to_children, basedir, rootdir);
 
     // Find the ancestors of this file to show the navigation links to
     // go up the table of contents to higher levels.
@@ -55,7 +56,7 @@ function convert_file(file) {
     // Write HTML.
     fs.writeFileSync(file.replace('.xml', '.html'),
         page_template({
-            basedir: basedir,
+            rootdir: rootdir,
             ancestors: ancestors,
             sibling_previous: make_page_link(get_sibling(page_id, -1)),
             sibling_next: make_page_link(get_sibling(page_id, +1)),
@@ -71,7 +72,7 @@ function make_page_link(page_id) {
     if (!page_id) return null;
     var file = section_to_filename[page_id];
     return {
-        filename: "/" + basedir + "/" + file +".html",
+        filename: rootdir + "/" + file +".html",
         title: render_body.make_page_title(render_body.parse_xml_file(basedir + "/" + file + ".xml"))
     };
 }
