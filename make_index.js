@@ -46,7 +46,7 @@ function onfile(file, stat) {
         section_children[file_info[0]] = [];
 
         // map children to parents
-        var children = dom.findall("ns0:include").forEach(function(node) {
+        find_xincludes(dom, function(node) {
             var child_filename = path.dirname(file) + "/" + node.get('href');
             var child_dom = parse_xml_file(child_filename);
             var child_info = get_file_info(child_dom, child_filename);
@@ -57,6 +57,11 @@ function onfile(file, stat) {
         // make an index for handling searching by citation in the UI
         add_to_title_shard(file, dom);
     }
+}
+
+function find_xincludes(node, func) {
+    node.findall("ns0:include").forEach(func);
+    node.findall("*").forEach(function(child) { find_xincludes(child, func); });
 }
 
 function get_file_info(dom, file) {
