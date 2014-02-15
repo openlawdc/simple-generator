@@ -43,9 +43,9 @@
                         alert("Citation not found.")
                         return false;
                     }
-                    window.location = "/" + title_shard["sec"][sec].replace(".xml", ".html");
+                    window.location = "<%= rootdir %>/" + title_shard["sec"][sec].replace(".xml", ".html");
                 };
-                oReq.open("get", "/by_title/" + title + ".json", true);
+                oReq.open("get", "<%= rootdir %>/by_title/" + title + ".json", true);
                 oReq.send();
 
                 return false;
