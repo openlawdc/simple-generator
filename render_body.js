@@ -4,7 +4,7 @@ var path = require('path'),
     _ = require('lodash'),
     Citation = require('citation');
 
-var body_template = _.template(fs.readFileSync('templates/body._'));
+var body_template = _.template(fs.readFileSync(__dirname + '/templates/body._'));
 
 // Utility function to load an XML file using elementtree.
 exports.parse_xml_file = function(file) {
