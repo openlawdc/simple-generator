@@ -119,6 +119,7 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
     // paragraphs including annotations, form, and table-styled paragraphs.
     var body_groups = [ { group: null, paras: [] } ];
     body_paras.forEach(function(para) {
+        if (!para.group) para.group = "primary-content";
         if (para.group != body_groups[body_groups.length-1].group)
             body_groups.push( { group: para.group, paras: [] } );
         body_groups[body_groups.length-1].paras.push(para);

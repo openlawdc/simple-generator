@@ -4,7 +4,7 @@
     <% if (group.group) { %><div class="<%= group.group %>"><% } %> <% // prevent p:last-child { margin-bottom: 0; } from applying by not wraping the p's in unnecessary divs %>
 
     <% group.paras.forEach(function(l) { %>
-        <p class="<%= l.class %> <% if (l.is_placeholder) { %>placeholder<% } %>" style="padding-left: <%= l.indentation*30 %>px">
+        <p class="<%= l.class %> <% if (l.is_placeholder) { %>placeholder<% } %>" style="padding-left: <%= l.indentation*2.25 %>em">
             <% if (l.class == "child-link") { %>
                 <span class="title"><a href="<%= l.filename%>"><%= l.title%></a></span>
                 <% if (l.section_range[0] && l.section_range[1]) { %>

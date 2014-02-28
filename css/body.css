@@ -11,7 +11,7 @@
     }
 
     #content p.has-level-num {
-        margin-left: 30px;
+        margin-left: 2.25em;
     }
 
     #content .level-num {
@@ -36,6 +36,10 @@
         color: #666;
     }
 
+.primary-content {
+    padding: 0 .5em;
+}
+
 .annotations {
     margin: 1em 0;
     padding: 1em 0;
@@ -45,7 +49,6 @@
 }
 
 .annotations .subheading {
-    font-size: 15px;
     margin-bottom: 0;
     line-height: 1.67em;
     font-weight: bold
