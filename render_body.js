@@ -85,13 +85,13 @@ exports.make_page_title = function(obj) {
     return title;
 }
 
-exports.render_body = function(filename, dom, section_to_filename, section_to_children, basedir, rootdir) {
-    body_info = exports.process_body(filename, dom, section_to_filename, section_to_children, basedir, rootdir);
+exports.render_body = function(filename, dom, section_to_filename, section_to_children, basedir, rootdir, other_resources) {
+    body_info = exports.process_body(filename, dom, section_to_filename, section_to_children, basedir, rootdir, other_resources);
     body_info.rendered = body_template(body_info);
     return body_info;
 }
 
-exports.process_body = function(filename, dom, section_to_filename, section_to_children, basedir, rootdir) {
+exports.process_body = function(filename, dom, section_to_filename, section_to_children, basedir, rootdir, other_resources) {
     // Get the <text> and <level> nodes that make up the body
     // and flatten them out so the template doesn't have to deal with
     // the recursive nature of <level> nodes.
@@ -101,8 +101,10 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
         section_to_filename: section_to_filename,
         section_to_children: section_to_children,
         basedir: basedir,
-	rootdir: rootdir,
-        filename: filename});
+        rootdir: rootdir,
+        filename: filename,
+        other_resources: other_resources
+        });
 
     // Set the 'has-level-num' class on paragraphs with a level-num span
     // so that the CSS can take care of the un-indentation needed to get
@@ -272,16 +274,25 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                     flatten_args.paras.push({ text: parent_node_text, indentation: indentation||0, class: "subheading", group: para_group });
                 }
 
-                if (!flatten_args.basedir) {
-                    flatten_args.paras.push({ text: [{ text: "[link to child page cannot be rendered]", class: "" }], indentation: indentation||0, class: "", group: para_group });
-                    return;
-                }
-
                 // Append a paragraph for the XInclude.
-                var fn = path.dirname(flatten_args.filename) + "/" + child.get('href');
-                var dom = exports.parse_xml_file(fn);
-                var child_id = exports.get_file_id(dom, fn, flatten_args.basedir);
+                var fn = path.join(path.dirname(flatten_args.filename), child.get('href'));
+                var dom;
+                if (flatten_args.other_resources && fn in flatten_args.other_resources) {
+                    // Allow the caller to provide us with the DOM itself for any referenced
+                    // files. In the DC Code Editor, the page being rendered any any referenced
+                    // files may all have been edited, so we don't want to go to disk to retrieve
+                    // their contents.
+                    dom = flatten_args.other_resources[fn];
+                } else {
+                    dom = exports.parse_xml_file(fn);
+                }
                 var title = exports.make_page_title(dom);
+                var section_range = [null, null];
+                if (flatten_args.basedir) {
+                    // flatten_args.basedir won't be available when called from the DC Code Editor
+                    var child_id = (flatten_args.basedir ? exports.get_file_id(dom, fn, flatten_args.basedir) : null);
+                    section_range = [get_section_range(child_id, 0, flatten_args), get_section_range(child_id, 1, flatten_args)];
+                }
                 flatten_args.paras.push({
                     group: "",
                     indentation: (indentation||0),
@@ -291,7 +302,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                     filename: child.get('href').replace(".xml", ".html"),
                     title: title,
                     is_placeholder: dom.find("type").text == "placeholder" || (title.indexOf("[Repealed]") >= 0),
-                    section_range: [get_section_range(child_id, 0, flatten_args), get_section_range(child_id, 1, flatten_args)]
+                    section_range: section_range
                 });
             }
 
