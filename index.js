@@ -1,8 +1,10 @@
 var basedir = process.argv[2] || '.';
-var rootdir = process.argv[3] || '';
+var outdir = process.argv[3] || '.';
+var rootdir = process.argv[4] || '';
 
 var finder = require('findit')(basedir),
     path = require('path'),
+    mkdirp = require('mkdirp'),
     _ = require('lodash'),
     fs = require('fs'),
     render_body = require('./render_body.js');
@@ -24,7 +26,7 @@ function ondirectory(dir, stat, stop) {
 }
 function onfile(file, stat) {
     // run a specific file by putting it on the command line
-    if (process.argv.length > 4 && !file.match(process.argv[4])) return;
+    if (process.argv.length > 5 && !file.match(process.argv[5])) return;
     if (file.match(/\.xml$/))
         convert_file(file);
 }
@@ -54,7 +56,8 @@ function convert_file(file) {
     ancestors.reverse();
 
     // Write HTML.
-    fs.writeFileSync(file.replace('.xml', '.html'),
+    mkdirp.sync(path.dirname(outdir + "/" + section_to_filename[page_id][1]));
+    fs.writeFileSync(outdir + "/" + section_to_filename[page_id][1],
         page_template({
             rootdir: rootdir,
             ancestors: ancestors,
@@ -70,10 +73,11 @@ function make_page_link(page_id) {
     /* This is a utility function to take a page id and make an object
        with information needed to render a link to that page: href and title. */
     if (!page_id) return null;
-    var file = section_to_filename[page_id];
+    var url = rootdir + "/" + section_to_filename[page_id][1];
+    url = url.replace(/\/index\.html$/, ''); // no need to put /index.html on URLs
     return {
-        filename: rootdir + "/" + file +".html",
-        title: render_body.make_page_title(render_body.parse_xml_file(basedir + "/" + file + ".xml"))
+        filename: url,
+        title: render_body.make_page_title(render_body.parse_xml_file(basedir + "/" + section_to_filename[page_id][0]))
     };
 }
 

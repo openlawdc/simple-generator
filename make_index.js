@@ -40,7 +40,7 @@ function onfile(file, stat) {
         
         // remember the file name for each section
         var file_info = get_file_info(dom, file);
-        section_index[file_info[0]] = file_info[1];
+        section_index[file_info[0]] = [file_info[1], file_info[2]];
 
         // make an ordered list of children of each parent
         section_children[file_info[0]] = [];
@@ -65,8 +65,8 @@ function find_xincludes(node, func) {
 }
 
 function get_file_info(dom, file) {
-    // this is duplicated in index.js
-    var fn = file.substring(basedir.length).replace(".xml", "");
+    // the part that gets the id is duplicated in render_body.js
+    var fn = file.substring(basedir.length);
     var id;
     if (dom.find("type").text == "Section")
         id = dom.find("num").text;
@@ -74,8 +74,15 @@ function get_file_info(dom, file) {
         id = dom.find("section").text;
     // TODO: What happens if there's a link to a section in a placeholder page that has a range of sections?
     else
-        id = fn;
-    return [id, fn];
+        id = fn.replace(".xml", "");
+
+    // for files that have unique filenames across the whole code
+    var output_fn = fn;
+    if (dom.find("type").text == "Section" || dom.find("type").text == "placeholder")
+        output_fn = "sections/" + path.basename(fn);
+    output_fn = output_fn.replace(".xml", ".html")
+
+    return [id, fn, output_fn];
 }
 
 function add_to_title_shard(fn, dom) {

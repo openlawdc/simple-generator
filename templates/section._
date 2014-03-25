@@ -88,7 +88,7 @@
                     <p><a href="<%= sibling_next.filename%>"><%- sibling_next.title %></a>
                 <% } %>
 
-                <h2>Status of This Page</h2>
+                <h2>Current as of...</h2>
                 <p class="recency"><%- recency_info %></p>
 
             </div>

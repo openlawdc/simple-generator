@@ -288,10 +288,13 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                 }
                 var title = exports.make_page_title(dom);
                 var section_range = [null, null];
+                var child_filename = child.get('href').replace(".xml", ".html");
                 if (flatten_args.basedir) {
                     // flatten_args.basedir won't be available when called from the DC Code Editor
-                    var child_id = (flatten_args.basedir ? exports.get_file_id(dom, fn, flatten_args.basedir) : null);
+                    var child_id = exports.get_file_id(dom, fn, flatten_args.basedir);
                     section_range = [get_section_range(child_id, 0, flatten_args), get_section_range(child_id, 1, flatten_args)];
+                    child_filename = flatten_args.rootdir + "/" + flatten_args.section_to_filename[child_id][1];
+                    child_filename = child_filename.replace(/\/index\.html$/, ''); // no need to put /index.html on URLs
                 }
                 flatten_args.paras.push({
                     group: "",
@@ -299,7 +302,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                     class: "child-link",
                     text: [],
 
-                    filename: child.get('href').replace(".xml", ".html"),
+                    filename: child_filename,
                     title: title,
                     is_placeholder: dom.find("type").text == "placeholder" || (title.indexOf("[Repealed]") >= 0),
                     section_range: section_range
@@ -395,7 +398,7 @@ function cited(text, flatten_args) {
         var fn = flatten_args.section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section];
         if (!fn) return; // section not actually in the code?
 
-        return linked(flatten_args.rootdir + "/" + fn + '.html',
+        return linked(flatten_args.rootdir + "/" + fn[1],
             cite.match);
     }
 
@@ -442,7 +445,7 @@ function get_section_range(id, start_or_end, flatten_args, depth) {
         }
 
         // Parse the XML of the child.
-        var dom = exports.parse_xml_file(flatten_args.basedir + "/" + flatten_args.section_to_filename[id] + ".xml");
+        var dom = exports.parse_xml_file(flatten_args.basedir + "/" + flatten_args.section_to_filename[id][0]);
 
         // For sections, return just the section number. Omit the section symbol
         // because that's handled in the template.

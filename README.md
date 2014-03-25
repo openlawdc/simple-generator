@@ -19,22 +19,23 @@ Make an index of which file contains which sections of the code:
 
 which writes `code/section_index.json` and `code/section_parents_index.json`.
 
-Convert XML sources to HTML, assuming the 'code' directory will appear at '/dccode' on the server:
+Convert XML sources to HTML, writing to a `dccode` directory and assuming the 'code' directory will appear at '/dccode' on the server:
 
 ```
-node index.js code /dccode
+node index.js code dccode /dccode
 ```
 
 Or just specific files (pass a regular expression):
 
 ```
-node index.js code /dccode code/Division-I/Title-2/Chapter-17/2-1713.xml
+node index.js code dccode /dccode code/Division-I/Title-2/Chapter-17/2-1713.xml
 ```
 
-Copy the CSS into the code directory:
+Copy the CSS and by_title directories into the code directory:
 
 ```
-cp -R css code/css
+cp -R css dccode
+cp -R code/by_title dccode
 ```
 
 [Then set up a testing server](https://gist.github.com/tmcw/4989751) like
