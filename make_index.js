@@ -55,7 +55,7 @@ function onfile(file, stat) {
         });
 
         // make an index for handling searching by citation in the UI
-        add_to_title_shard(file.substring(basedir.length), dom);
+        add_to_title_shard(file_info[2], dom);
     }
 }
 
@@ -121,6 +121,6 @@ function done() {
     // shard. The entire mapping is ~1.5 MB, which is a lot to send to a browser on every request.
     if (!fs.existsSync(basedir + 'by_title')) fs.mkdir(basedir + 'by_title');
     for (title in title_shards)
-        fs.writeFileSync(basedir + 'by_title/' + title + ".json", JSON.stringify(title_shards[title]));
+        fs.writeFileSync(basedir + 'by_title/' + title.replace(/:/, '-') + ".json", JSON.stringify(title_shards[title]));
 
 }
