@@ -21,7 +21,6 @@
 
         <script>
             function search_box_submit() {
-                event.preventDefault();
                 var elem = document.getElementById("search-box")
                 var val = elem.value;
                 if (val.length == 0) return false;
