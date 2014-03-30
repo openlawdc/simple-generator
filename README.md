@@ -1,7 +1,7 @@
 # /simple 2013
 
-A rough cut of [Josh Tauberer](http://razor.occams.info/)'s [dc-code-prototype](https://github.com/JoshData/dc-code-prototype)
-as HTML.
+This node.js project renders the [dc-code-prototype](https://github.com/JoshData/dc-code-prototype)
+into HTML for [dccode.org/simple](http://dccode.org/simple/).
 
 ## usage
 
