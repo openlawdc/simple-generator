@@ -211,13 +211,10 @@ textarea,
 input[type=text] {
   background-color:#fff;
   border:1px solid #ccc;
-  -webkit-box-shadow:1px 1px 2px rgba(0,0,0,0.1);
-     -moz-box-shadow:1px 1px 2px rgba(0,0,0,0.1);
-          box-shadow:1px 1px 2px rgba(0,0,0,0.1);
-  -webkit-transition:border linear .2s, box-shadow linear .2s;
-     -moz-transition:border linear .2s, box-shadow linear .2s;
-       -o-transition:border linear .2s, box-shadow linear .2s;
-          transition:border linear .2s, box-shadow linear .2s;
+  -webkit-transition:border linear .2s;
+     -moz-transition:border linear .2s;
+       -o-transition:border linear .2s;
+          transition:border linear .2s;
   }
   textarea:focus,
   input[type=text]:focus {
@@ -239,9 +236,6 @@ input[type=submit] {
   text-transform:uppercase;
   border:none;
   padding:9px 20px;
-  -webkit-box-shadow:2px 2px 4px rgba(0,0,0,0.1);
-     -moz-box-shadow:2px 2px 4px rgba(0,0,0,0.1);
-          box-shadow:2px 2px 4px rgba(0,0,0,0.1);
   }
   input[type=submit]:hover {
     background-color:#002f4c;

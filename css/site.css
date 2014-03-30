@@ -67,6 +67,25 @@ footer p {
     font-size: 16px;
 }
 
+#search-box {
+    width:100px;
+}
+
+#search-button {
+    background:#efefef;
+    border:1px solid #ccc;
+    border-left:0;
+    font-size:22px;
+    margin:0;
+    height:30px;
+    padding:4px 4px;
+    vertical-align:top;
+}
+
+#search-button:hover {
+    background:#ccc;
+}
+
 @media (max-width: 780px) {
     #sidebar {
         font-size: 11px;

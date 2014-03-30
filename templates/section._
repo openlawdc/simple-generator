@@ -4,8 +4,8 @@
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]><!--><html class="no-js"> <!--<![endif]-->
     <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta charset='utf-8'>
+        <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
         <title>DC Code - <%= title %></title>
         <meta name='description' content='A simple, free browser for the Washington, DC Code'>
         <meta name='viewport' content='width=device-width'>
@@ -21,8 +21,8 @@
             <header>
                 <div class='right'>
                     <form id='search-form'>
-                        <input id='search-box' type="text" placeholder="15-101" style="width: 100px"/>
-                        <button id='search-button' style='height: 30px; font-size: 22px;'><span class="icon-search"/></button>
+                        <input id='search-box' type='text' placeholder='15-101'
+                        /><button id='search-button'><span class='icon-search'></span></button>
                     </form>
                 </div>
                 <p id='sitename'>Code of the District of Columbia (Unofficial)</p>
@@ -54,14 +54,17 @@
                 <h2>Current as of...</h2>
                 <p class="recency"><%- recency_info %></p>
             </div>
-            <div class="col8">
-                <div id="content">
+            <div class='col8'>
+                <div id='content'>
                     <%= body %>
                 </div>
             </div>
             </div>
             <footer>
-                <p>This is a fast, unofficial interface to the <a href='http://dccouncil.us/UnofficialDCCode'>Unofficial DC Code</a> by <a href='https://github.com/openlawdc'>openlawdc</a>. Please <a href='https://github.com/openlawdc/simple-2/issues'>report issues</a>.</p>
+                <p>This is a fast, unofficial interface to the
+                <a href='http://dccouncil.us/UnofficialDCCode'>Unofficial DC Code</a> by
+                <a href='https://github.com/openlawdc'>openlawdc</a>.
+                Please <a href='https://github.com/openlawdc/simple-generator/issues'>report issues</a>.</p>
             </footer>
         </div>
         <script>
