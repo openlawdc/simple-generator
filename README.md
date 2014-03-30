@@ -22,7 +22,7 @@ which writes `code/section_index.json` and `code/section_parents_index.json`.
 Convert XML sources to HTML, writing to a `dccode` directory and assuming the 'code' directory will appear at '/dccode' on the server:
 
 ```
-node index.js code dccode /dccode
+node index.js code simple /simple
 ```
 
 Or just specific files (pass a regular expression):
@@ -34,8 +34,9 @@ node index.js code dccode /dccode code/Division-I/Title-2/Chapter-17/2-1713.xml
 Copy the CSS and by_title directories into the code directory:
 
 ```
-cp -R css dccode
-cp -R code/by_title dccode
+cp -R css simple
+cp -R js simple
+cp -R code/by_title simple
 ```
 
 [Then set up a testing server](https://gist.github.com/tmcw/4989751) like

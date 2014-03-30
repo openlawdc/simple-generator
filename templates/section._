@@ -2,71 +2,35 @@
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<!--[if gt IE 8]><!--><html class="no-js"> <!--<![endif]-->
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
         <title>DC Code - <%= title %></title>
-        <meta name="description" content="">
-
-        <meta name="viewport" content="width=device-width">
-
+        <meta name='description' content='A simple, free browser for the Washington, DC Code'>
+        <meta name='viewport' content='width=device-width'>
         <link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,700' rel='stylesheet' type='text/css'>
         <link rel='stylesheet' type='text/css' href='<%= rootdir %>/css/reset.css' media='screen' />
         <link rel='stylesheet' type='text/css' href='<%= rootdir %>/css/site.css' media='screen' />
         <link rel='stylesheet' type='text/css' href='<%= rootdir %>/css/body.css' media='screen' />
         <link rel='stylesheet' type='text/css' href='<%= rootdir %>/css/print.css' media='print' />
         <link rel='stylesheet' type='text/css' href='<%= rootdir %>/css/icons/style.css' media='screen' />
-
-        <script>
-            function search_box_submit() {
-                var elem = document.getElementById("search-box")
-                var val = elem.value;
-                if (val.length == 0) return false;
-
-                val = val.replace("§", "").replace(" ", "");
-                var p = val.indexOf("-");
-                if (p == -1) {
-                    alert("Search by citation, such as §50-102.");
-                    return false;
-                }
-
-                title = val.substring(0, p).replace(/:/, '-');
-                sec = val.substring(p+1);
-
-                var oReq = new XMLHttpRequest();
-                oReq.onload = function() {
-                    var title_shard = JSON.parse(this.responseText);
-                    if (!(sec in title_shard["sec"])) {
-                        alert("Citation not found.")
-                        return false;
-                    }
-                    window.location = "<%= rootdir %>/" + title_shard["sec"][sec];
-                };
-                oReq.open("get", "<%= rootdir %>/by_title/" + title + ".json", true);
-                oReq.send();
-
-                return false;
-            }
-        </script>
     </head>
     <body>
         <div class="container">
-
             <header>
                 <div class='right'>
-                    <form onsubmit="return search_box_submit()">
-                        <input id="search-box" type="text" placeholder="15-101" style="width: 100px"/>
-                        <button style="height: 30px; font-size: 22px;" onclick="search_box_submit()"><span class="icon-search"/></button>
+                    <form id='search-form'>
+                        <input id='search-box' type="text" placeholder="15-101" style="width: 100px"/>
+                        <button id='search-button' style='height: 30px; font-size: 22px;'><span class="icon-search"/></button>
                     </form>
                 </div>
-                <p id="sitename">Code of the District of Columbia (Unofficial)</p>
+                <p id='sitename'>Code of the District of Columbia (Unofficial)</p>
             </header>
 
             <div class="clearfix" style="width: 100%;">
 
-            <div id="sidebar" class="col4">
+            <div id='sidebar' class='col4'>
                 <% if (ancestors.length > 0) { %>
                     <h2>You Are Here</h2>
                     <ul class="ancestors">
@@ -89,20 +53,21 @@
 
                 <h2>Current as of...</h2>
                 <p class="recency"><%- recency_info %></p>
-
             </div>
-
             <div class="col8">
                 <div id="content">
                     <%= body %>
                 </div>
             </div>
-
             </div>
-
             <footer>
                 <p>This is a fast, unofficial interface to the <a href='http://dccouncil.us/UnofficialDCCode'>Unofficial DC Code</a> by <a href='https://github.com/openlawdc'>openlawdc</a>. Please <a href='https://github.com/openlawdc/simple-2/issues'>report issues</a>.</p>
             </footer>
         </div>
+        <script>
+        ROOTDIR = "<%= rootdir %>";
+        </script>
+        <script src='<%= rootdir %>/js/jquery-1.11.0.min.js'></script>
+        <script src='<%= rootdir %>/js/search.js'></script>
     </body>
 </html>
