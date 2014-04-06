@@ -13,15 +13,26 @@ a {
     text-decoration: underline;
 }
 
+header h1 a {
+    text-decoration:none;
+    color:#555;
+    font-size:24px;
+    font-weight:normal;
+}
+
+.quiet {
+    color:#777;
+}
+
 a:hover {
     color: rgba(42,65,150,1);
 }
 
 header {
-    padding: 10px 0;
+    padding: 20px 0;
     margin-bottom: 10px;
     color: #444;
-    border-bottom: 3px solid #75787b;
+    background:#f5f5f5;
 }
 
 header .right {
@@ -41,9 +52,9 @@ header a {
 
 
 footer {
-    border-top: 1px solid #444;
-    margin-top: 1em;
-    padding: 1em 10px;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background:#f5f5f5;
     font-size: 80%;
     color: #444;
 }
@@ -57,33 +68,20 @@ footer p {
     font-size: 13px;
 }
 
-    #sidebar h2 {
-        font-size: 14px;
-        margin-top: 15px;
-        margin-bottom: 10px;
-    }
+#sidebar h2 {
+    font-size: 14px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
 
 #content {
     font-size: 16px;
 }
 
-#search-box {
-    width:100px;
-}
-
-#search-button {
-    background:#efefef;
-    border:1px solid #ccc;
-    border-left:0;
-    font-size:22px;
-    margin:0;
-    height:30px;
-    padding:4px 4px;
-    vertical-align:top;
-}
-
-#search-button:hover {
-    background:#ccc;
+header .st-search-input {
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
 }
 
 @media (max-width: 780px) {

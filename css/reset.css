@@ -61,16 +61,17 @@ h5,
 h6 {
   margin:0;
   font-weight:bold;
+  color:#555;
   }
 
 h1 {
-  font-size:32px;
+  font-size:28px;
   margin-bottom:20px;
   line-height:1em;
   }
 
 h2 {
-  font-size:28px;
+  font-size:24px;
   margin-bottom:20px;
   line-height:1.25em;
   }
@@ -191,59 +192,11 @@ sup {
 label {
   display:block;
   }
-select,
-textarea,
-input[type=text] {
-  display:inline-block;
-  height:30px;
-  width:95%;
-  margin-bottom:10px;
-  font-size:13px;
-  font-weight:500;
-  line-height:20px;
-  color:#a0a0a0;
-  vertical-align:middle;
-  padding:4px 6px;
-  -webkit-border-radius:1px;
-          border-radius:1px;
-  }
-textarea,
-input[type=text] {
-  background-color:#fff;
-  border:1px solid #ccc;
-  -webkit-transition:border linear .2s;
-     -moz-transition:border linear .2s;
-       -o-transition:border linear .2s;
-          transition:border linear .2s;
-  }
-  textarea:focus,
-  input[type=text]:focus {
-    outline:thin dotted\8; /* ie8 below */
-    color:#404040;
-    border-color:#00395D;
-    border-width:1px;
-    }
 
 textarea {
   height:200px;
   max-width:none;
   }
-input[type=submit] {
-  background-color:#00395D;
-  cursor:pointer;
-  color:#fff;
-  font-weight:bold;
-  text-transform:uppercase;
-  border:none;
-  padding:9px 20px;
-  }
-  input[type=submit]:hover {
-    background-color:#002f4c;
-    }
-  input[type=submit]:active {
-    position:relative;
-    top:1px;
-    }
 
 table {
   width:100%;

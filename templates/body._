@@ -1,5 +1,6 @@
-<h1><%= title %></h1>
+<h1 data-swiftype-index='true'><%= title %></h1>
 
+<div data-swiftype-index='true'>
 <% body.forEach(function(group) { %>
     <% if (group.group) { %><div class="<%= group.group %>"><% } %> <% // prevent p:last-child { margin-bottom: 0; } from applying by not wraping the p's in unnecessary divs %>
 
@@ -20,4 +21,4 @@
 
     <% if (group.group) { %></div><% } %>
 <% }); %>
-
+</div>

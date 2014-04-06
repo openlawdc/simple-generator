@@ -27,9 +27,11 @@ function ondirectory(dir, stat, stop) {
 function onfile(file, stat) {
     // run a specific file by putting it on the command line
     if (process.argv.length > 5 && !file.match(process.argv[5])) return;
-    if (file.match(/\.xml$/))
+    if (file.match(/\.xml$/)) {
         convert_file(file);
+    }
 }
+
 finder.on('directory', ondirectory)
     .on('file', onfile);
 
@@ -89,7 +91,7 @@ function get_sibling(id, direction) {
        The preceding document is the document's preceding sibling, if it has
        one. This perhaps should be changed one day to be the preceding sibling's
        last-most decedendant. Not sure if that'll be obvious in the UI though.
-        
+
        If the document doesn't have a preceding sibling, then the previous
        document will be its parent. If the document doesn't have a following
        sibling then the next document will be its parent's next document. */
@@ -105,22 +107,27 @@ function get_sibling(id, direction) {
     var sibling = null;
     section_to_children[parent].forEach(function(child_id) {
         // Looking for the first sibling after the document.
-        if (seen_me && direction == 1 && !sibling)
+        if (seen_me && direction == 1 && !sibling) {
             sibling = child_id;
+        }
 
-        if (child_id == id) seen_me = true;
+        if (child_id == id) {
+            seen_me = true;
+        }
 
         // Looking for the last sibling before the document.
-        if (!seen_me && direction == -1)
+        if (!seen_me && direction == -1) {
             sibling = child_id;
+        }
     });
 
     if (!sibling) {
-        if (direction == -1)
+        if (direction == -1) {
             return parent;
-        else
+        } else {
             return get_sibling(parent, direction);
+        }
     }
-    
+
     return sibling;
 }
