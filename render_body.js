@@ -249,10 +249,10 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                 // If we're the first paragraph within a level, continue to pass down the parent node's
                 // number and heading until it reaches a text node where it gets displayed. But don't
                 // indent the text paragraph until we've discharged the parent level's heading.
-                var pni = parent_node_indents || 0;
+                var pni = 0;
                 if (i == 0 && parent_node_text) {
+                    pni = (parent_node_indents || 0) + 1;
                     my_num_heading = parent_node_text.concat(my_num_heading);
-                    pni += 1;
                 }
 
                 // Don't pass an empty array.
