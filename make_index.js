@@ -119,7 +119,7 @@ function done() {
     // Split up the section to filename mapping by title and create static Javascript-powered
     // redirect-issuing pages for each title. We split by title because it is a handy way to
     // shard. The entire mapping is ~1.5 MB, which is a lot to send to a browser on every request.
-    if (!fs.existsSync(basedir + 'by_title')) fs.mkdir(basedir + 'by_title');
+    if (!fs.existsSync(basedir + 'by_title')) fs.mkdirSync(basedir + 'by_title');
     for (title in title_shards)
         fs.writeFileSync(basedir + 'by_title/' + title.replace(/:/, '-') + ".json", JSON.stringify(title_shards[title]));
 
