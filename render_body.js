@@ -110,10 +110,8 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
     // so that the CSS can take care of the un-indentation needed to get
     // level numbering in the right place.
     body_paras.forEach(function(para) {
-        para.text.forEach(function(span) {
-            if (span.class == "level-num")
-                para.class += " has-level-num";
-        });
+        if (para.text.filter(function(span) { return span.class == "level-num" }).length > 0)
+            para.class += " has-level-num";
     });
 
     // Group the paragraphs into <div>s according to the 'grouop' value
