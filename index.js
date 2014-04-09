@@ -32,11 +32,52 @@ function onfile(file, stat) {
     }
 }
 
-finder.on('directory', ondirectory)
-    .on('file', onfile);
+var cluster = require("cluster");
+var numCPUs = require("os").cpus().length;
+var worker_info = null;
+
+if (cluster.isMaster) {
+    // Start multi-threading by forking a child process for each
+    // CPU on this machine.
+    for (var i = 0; i < numCPUs; i++) {
+        // fork a worker and tell it which subset of the files to
+        // process, based on its index and numCPUs.
+        var worker = cluster.fork();
+        worker.send([i, numCPUs]);
+    }
+    cluster.on('disconnect', function(worker) {
+        console.log('Worker #' + worker.id + ' finished.');
+    });
+} else {
+    process.on('message', function(msg) {
+        worker_info = msg;
+        convert_files(function() { cluster.worker.disconnect(); })
+    });
+
+}
+
+function convert_files(finished_callback) {
+   finder
+    .on('directory', ondirectory)
+    .on('file', onfile)
+    .on('end', finished_callback);
+}
 
 // Main function to convert a code XML file to its HTML rendering.
 function convert_file(file) {
+    // If this is a worker process, we want to process only a subset of
+    // the files. The worker_info global variable holds an array containing
+    // our zero-based worker index and the total number of workers. To
+    // decide whether to process this file, we'll do a really dumb hash
+    // of the file name to yield an integer, and then do integer division.
+    if (worker_info) {
+        var filename_hash = 0;
+        for (var i = 0; i < file.length; i++)
+            filename_hash += file.charCodeAt(i);
+        if ((filename_hash % worker_info[1]) != worker_info[0])
+            return; // procesed by another worker
+    }
+
     console.log(file);
 
     // Load the file & sanity check that this is actually a file for the DC Code.
