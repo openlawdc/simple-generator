@@ -228,12 +228,36 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                     is_special_type = true;
                 }
 
-                // Don't display the level's num and heading here but rather on the first
-                // paragraph within the level.
+                // Numbering and headings of levels aren't usually displayed a way that matches
+                // the DOM hierarchy. For instance:
+                //   <level>
+                //      <num>(a)</num>
+                //      <level>
+                //        <num>(b)</num>
+                //        <text>Lorem ipsum...</text>
+                // is rendered into:
+                //    <p>(a) (b) Lorem ipsum...</p>
+                // all in one <p>. We handle this by pushing down the "(a)" and any heading into
+                // the first child (recursively) until we find a text paragraph where we'll
+                // "discharge" all of the parent numbering/headings.
+                //
+                // One exception is that we should not have a heading run into another heading or
+                // number. So we should never see <p>(a) In general -- (b) Definitions -- Lorem</p>
+                // in a single paragraph. Instead we should render these in separate paragraphs.
+                // We'll check for this case at the point where we're seeing the child ("(b) Definitions...").
+
                 var my_num_heading = [];
                 if (!child.find("type") || is_special_type) {
+                    // Check if we have two headings bumping together, as noted in the comment block above.
+                    // If so, render/discharge the parent heading immediately.
+                    if (i == 0 && parent_node_text && parent_node_text.filter(function(x){ return x.class == "level-heading" }).length > 0 && (child.find("num") || child.find("heading"))) {
+                        flatten_args.paras.push({ text: parent_node_text, indentation: indentation - parent_node_indents, class: "", group: para_group });
+                        parent_node_text = null;
+                    }
+
                     if (child.find("num")) my_num_heading.push( { text: child.find("num").text + " ", class: "level-num" } );
                     if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + (child_para_group ? "" : " — "), class: "level-heading" } );
+
                 } else {
                     // This might be a big level like a Division. Don't use the level-num class,
                     // because the indentation CSS only works for bullet-like numbering.
