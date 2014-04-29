@@ -17,7 +17,7 @@ exports.get_file_id = function(dom, file, basedir) {
     // (this is duplicated in make_index.js, except for the +1 for a slash)
     if (basedir.charAt(basedir.length-1) == "/") basedir = basedir.substring(0, basedir.length-1); // chop trailing slash
     var fn = file.substring(basedir.length+1).replace(".xml", "");
-    if (dom.find("type").text == "Section")
+    if (dom.find("type").text == "section")
         return dom.find("num").text;
     else if (dom.find("type").text == "placeholder" && dom.find("section"))
         return dom.find("section").text;
@@ -36,7 +36,7 @@ exports.make_page_title = function(obj) {
     if (level_type == "document") {
         // this is the root, just use the heading
 
-    } else if (level_type == "Section") {
+    } else if (level_type == "section") {
         // this is a section, so show "§ XX-YY".
         title = "§ " + obj.find("num").text;
 
@@ -62,7 +62,7 @@ exports.make_page_title = function(obj) {
 
     } else {
         // "Division I", "Title 10", "Part XXX", etc.
-        title = level_type;
+        title = obj.find("prefix").text;
         if (obj.find("num"))
             title += " " + obj.find("num").text;
     }
@@ -262,7 +262,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                     // This might be a big level like a Division. Don't use the level-num class,
                     // because the indentation CSS only works for bullet-like numbering.
                     var heading = "";
-                    if (child.find("type")) heading = child.find("type").text + " ";
+                    if (child.find("prefix")) heading = child.find("prefix").text + " ";
                     if (child.find("num")) heading += child.find("num").text + ". ";
                     if (child.find("heading")) heading += child.find("heading").text;
                     my_num_heading.push( { text: heading, class: "level-heading" } );
@@ -471,7 +471,7 @@ function get_section_range(id, start_or_end, flatten_args, depth) {
 
         // For sections, return just the section number. Omit the section symbol
         // because that's handled in the template.
-        if (dom.find("type").text == "Section") {
+        if (dom.find("type").text == "section") {
             var num = dom.find("num").text;
             return num;
         }
