@@ -186,151 +186,159 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
         and table paragraphs).
         */
 
-    node.getchildren()
-        .filter(function(node) { return node.tag == "text" || node.tag == "level" || node.tag == "ns0:include" })
-        .forEach(function(child, i) {
-            if (child.tag == "text") {
-                // Create a paragraph object and add it to 'flatten_args.paras'.
+    function render_heading() {
+        if (parent_node_text) {
+            flatten_args.paras.push({ text: parent_node_text, indentation: indentation||0, class: "subheading", group: para_group });
+        }
+    }
 
-                // Check if we have any numbering or headings
-                var initial_text = [];
-                var my_indentation = indentation || 0;
-                if (i == 0 && parent_node_text) {
-                    if (para_group) {
-                        // In any of the special paragraph classes that we track for grouping,
-                        // if there is any numbering or heading text coming from a parent level
-                        // don't display it inline in this paragraph. Make a separate heading
-                        // for it.
-                        flatten_args.paras.push({ text: parent_node_text, indentation: indentation, class: "subheading", group: para_group });
-                    } else {
-                        // This is the first paragraph within a level and we have a number or
-                        // heading from its parent to display. Put the parent number and heading here.
-                        initial_text = parent_node_text;
-                        my_indentation -= parent_node_indents;
-                    }
-                }
+    var renderers = {
+        text: function(child, i) {
+            // Create a paragraph object and add it to 'flatten_args.paras'.
 
-                // Flatten the text of the child, which takes care of turning mixed-content
-                // text like "lorem<span>ipsum</span> dolor" into a flat array of objects.
-                var child_text = flatten_text(child, flatten_args);
-
-                // Append the paragraph.
-                flatten_args.paras.push({ text: initial_text.concat(child_text), indentation: my_indentation, group: para_group, class: "" });
-
-            } else if (child.tag == "level") {
-                // What group will we pass down into the child? If this level is of a certain type,
-                // then pass that group information down into all child paragraphs here.
-                var child_para_group = para_group;
-                var type = child.find("type");
-                var is_special_type = false;
-                if (type && ["annotations", "appendices", "form", "table"].indexOf(type.text) >= 0) {
-                    child_para_group = type.text;
-                    is_special_type = true;
-                }
-
-                // Numbering and headings of levels aren't usually displayed a way that matches
-                // the DOM hierarchy. For instance:
-                //   <level>
-                //      <num>(a)</num>
-                //      <level>
-                //        <num>(b)</num>
-                //        <text>Lorem ipsum...</text>
-                // is rendered into:
-                //    <p>(a) (b) Lorem ipsum...</p>
-                // all in one <p>. We handle this by pushing down the "(a)" and any heading into
-                // the first child (recursively) until we find a text paragraph where we'll
-                // "discharge" all of the parent numbering/headings.
-                //
-                // One exception is that we should not have a heading run into another heading or
-                // number. So we should never see <p>(a) In general -- (b) Definitions -- Lorem</p>
-                // in a single paragraph. Instead we should render these in separate paragraphs.
-                // We'll check for this case at the point where we're seeing the child ("(b) Definitions...").
-
-                var my_num_heading = [];
-                if (!child.find("type") || is_special_type) {
-                    // Check if we have two headings bumping together, as noted in the comment block above.
-                    // If so, render/discharge the parent heading immediately.
-                    if (i == 0 && parent_node_text && parent_node_text.filter(function(x){ return x.class == "level-heading" }).length > 0 && (child.find("num") || child.find("heading"))) {
-                        flatten_args.paras.push({ text: parent_node_text, indentation: indentation - parent_node_indents, class: "", group: para_group });
-                        parent_node_text = null;
-                    }
-
-                    if (child.find("num")) my_num_heading.push( { text: child.find("num").text + " ", class: "level-num" } );
-                    if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + (child_para_group ? "" : " — "), class: "level-heading" } );
-
+            // Check if we have any numbering or headings
+            var initial_text = [];
+            var my_indentation = indentation || 0;
+            if (i == 0 && parent_node_text) {
+                if (para_group) {
+                    // In any of the special paragraph classes that we track for grouping,
+                    // if there is any numbering or heading text coming from a parent level
+                    // don't display it inline in this paragraph. Make a separate heading
+                    // for it.
+                    flatten_args.paras.push({ text: parent_node_text, indentation: indentation, class: "subheading", group: para_group });
                 } else {
-                    // This might be a big level like a Division. Don't use the level-num class,
-                    // because the indentation CSS only works for bullet-like numbering.
-                    var heading = "";
-                    if (child.find("prefix")) heading = child.find("prefix").text + " ";
-                    if (child.find("num")) heading += child.find("num").text + ". ";
-                    if (child.find("heading")) heading += child.find("heading").text;
-                    my_num_heading.push( { text: heading, class: "level-heading" } );
+                    // This is the first paragraph within a level and we have a number or
+                    // heading from its parent to display. Put the parent number and heading here.
+                    initial_text = parent_node_text;
+                    my_indentation -= parent_node_indents;
                 }
-
-                // If we're the first paragraph within a level, continue to pass down the parent node's
-                // number and heading until it reaches a text node where it gets displayed. But don't
-                // indent the text paragraph until we've discharged the parent level's heading.
-                var pni = 0;
-                if (i == 0 && parent_node_text) {
-                    pni = (parent_node_indents || 0) + 1;
-                    my_num_heading = parent_node_text.concat(my_num_heading);
-                }
-
-                // Don't pass an empty array.
-                if (my_num_heading.length == 0) my_num_heading = null;
-
-                // The children at the top level are indentation zero, but inside that the
-                // indentation has to go up by 1.
-                flatten_body(child, flatten_args,
-                    indentation == null ? 0 : indentation+1,
-                    my_num_heading, pni,
-                    child_para_group);
-
-
-            } else if (child.tag == "ns0:include") {
-                // This is an XInclude tag that references a child that should be linked from here.
-
-                // We may have heading text from a higher level to display.
-                if (i == 0 && parent_node_text) {
-                    flatten_args.paras.push({ text: parent_node_text, indentation: indentation||0, class: "subheading", group: para_group });
-                }
-
-                // Append a paragraph for the XInclude.
-                var fn = path.join(path.dirname(flatten_args.filename), child.get('href'));
-                var dom;
-                if (flatten_args.other_resources && fn in flatten_args.other_resources) {
-                    // Allow the caller to provide us with the DOM itself for any referenced
-                    // files. In the DC Code Editor, the page being rendered any any referenced
-                    // files may all have been edited, so we don't want to go to disk to retrieve
-                    // their contents.
-                    dom = flatten_args.other_resources[fn];
-                } else {
-                    dom = exports.parse_xml_file(fn);
-                }
-                var title = exports.make_page_title(dom);
-                var section_range = [null, null];
-                var child_filename = child.get('href').replace(".xml", ".html");
-                if (flatten_args.basedir) {
-                    // flatten_args.basedir won't be available when called from the DC Code Editor
-                    var child_id = exports.get_file_id(dom, fn, flatten_args.basedir);
-                    section_range = [get_section_range(child_id, 0, flatten_args), get_section_range(child_id, 1, flatten_args)];
-                    child_filename = flatten_args.rootdir + "/" + flatten_args.section_to_filename[child_id][1];
-                    child_filename = child_filename.replace(/\/index\.html$/, ''); // no need to put /index.html on URLs
-                }
-                flatten_args.paras.push({
-                    group: "",
-                    indentation: (indentation||0),
-                    class: "child-link",
-                    text: [],
-
-                    filename: child_filename,
-                    title: title,
-                    is_placeholder: dom.find("type").text == "placeholder" || (title.indexOf("[Repealed]") >= 0),
-                    section_range: section_range
-                });
             }
 
+            // Flatten the text of the child, which takes care of turning mixed-content
+            // text like "lorem<span>ipsum</span> dolor" into a flat array of objects.
+            var child_text = flatten_text(child, flatten_args);
+
+            // Append the paragraph.
+            flatten_args.paras.push({ text: initial_text.concat(child_text), indentation: my_indentation, group: para_group, class: "" });
+        },
+
+        level: function(child, i) {
+            // What group will we pass down into the child? If this level is of a certain type,
+            // then pass that group information down into all child paragraphs here.
+            var child_para_group = para_group;
+            var type = child.find("type");
+            var is_special_type = false;
+            if (type && ["annotations", "appendices", "form", "table"].indexOf(type.text) >= 0) {
+                child_para_group = type.text;
+                is_special_type = true;
+            }
+
+            // Numbering and headings of levels aren't usually displayed a way that matches
+            // the DOM hierarchy. For instance:
+            //   <level>
+            //      <num>(a)</num>
+            //      <level>
+            //        <num>(b)</num>
+            //        <text>Lorem ipsum...</text>
+            // is rendered into:
+            //    <p>(a) (b) Lorem ipsum...</p>
+            // all in one <p>. We handle this by pushing down the "(a)" and any heading into
+            // the first child (recursively) until we find a text paragraph where we'll
+            // "discharge" all of the parent numbering/headings.
+            //
+            // One exception is that we should not have a heading run into another heading or
+            // number. So we should never see <p>(a) In general -- (b) Definitions -- Lorem</p>
+            // in a single paragraph. Instead we should render these in separate paragraphs.
+            // We'll check for this case at the point where we're seeing the child ("(b) Definitions...").
+
+            var my_num_heading = [];
+            if (!child.find("type") || is_special_type) {
+                // Check if we have two headings bumping together, as noted in the comment block above.
+                // If so, render/discharge the parent heading immediately.
+                if (i == 0 && parent_node_text && parent_node_text.filter(function(x){ return x.class == "level-heading" }).length > 0 && (child.find("num") || child.find("heading"))) {
+                    flatten_args.paras.push({ text: parent_node_text, indentation: indentation - parent_node_indents, class: "", group: para_group });
+                    parent_node_text = null;
+                }
+
+                if (child.find("num")) my_num_heading.push( { text: child.find("num").text + " ", class: "level-num" } );
+                if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + (child_para_group ? "" : " — "), class: "level-heading" } );
+
+            } else {
+                // This might be a big level like a Division. Don't use the level-num class,
+                // because the indentation CSS only works for bullet-like numbering.
+                var heading = "";
+                if (child.find("prefix")) heading = child.find("prefix").text + " ";
+                if (child.find("num")) heading += child.find("num").text + ". ";
+                if (child.find("heading")) heading += child.find("heading").text;
+                my_num_heading.push( { text: heading, class: "level-heading" } );
+            }
+
+            // If we're the first paragraph within a level, continue to pass down the parent node's
+            // number and heading until it reaches a text node where it gets displayed. But don't
+            // indent the text paragraph until we've discharged the parent level's heading.
+            var pni = 0;
+            if (i == 0 && parent_node_text) {
+                pni = (parent_node_indents || 0) + 1;
+                my_num_heading = parent_node_text.concat(my_num_heading);
+            }
+
+            // Don't pass an empty array.
+            if (my_num_heading.length == 0) my_num_heading = null;
+
+            // The children at the top level are indentation zero, but inside that the
+            // indentation has to go up by 1.
+            flatten_body(child, flatten_args,
+                indentation == null ? 0 : indentation+1,
+                my_num_heading, pni,
+                child_para_group);
+        },
+
+        "ns0:include": function(child, i) {
+            // This is an XInclude tag that references a child that should be linked from here.
+
+            // We may have heading text from a higher level to display.
+            if (i == 0) render_heading();
+
+            // Append a paragraph for the XInclude.
+            var fn = path.join(path.dirname(flatten_args.filename), child.get('href'));
+            var dom;
+            if (flatten_args.other_resources && fn in flatten_args.other_resources) {
+                // Allow the caller to provide us with the DOM itself for any referenced
+                // files. In the DC Code Editor, the page being rendered any any referenced
+                // files may all have been edited, so we don't want to go to disk to retrieve
+                // their contents.
+                dom = flatten_args.other_resources[fn];
+            } else {
+                dom = exports.parse_xml_file(fn);
+            }
+            var title = exports.make_page_title(dom);
+            var section_range = [null, null];
+            var child_filename = child.get('href').replace(".xml", ".html");
+            if (flatten_args.basedir) {
+                // flatten_args.basedir won't be available when called from the DC Code Editor
+                var child_id = exports.get_file_id(dom, fn, flatten_args.basedir);
+                section_range = [get_section_range(child_id, 0, flatten_args), get_section_range(child_id, 1, flatten_args)];
+                child_filename = flatten_args.rootdir + "/" + flatten_args.section_to_filename[child_id][1];
+                child_filename = child_filename.replace(/\/index\.html$/, ''); // no need to put /index.html on URLs
+            }
+            flatten_args.paras.push({
+                group: "",
+                indentation: (indentation||0),
+                class: "child-link",
+                text: [],
+
+                filename: child_filename,
+                title: title,
+                is_placeholder: dom.find("type").text == "placeholder" || (title.indexOf("[Repealed]") >= 0),
+                section_range: section_range
+            });
+        }
+    };
+
+    node.getchildren()
+        .filter(function(node) { return node.tag in renderers })
+        .forEach(function(child, i) {
+            renderers[child.tag](child, i);
         });
 }
 
