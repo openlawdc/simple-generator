@@ -10,7 +10,7 @@
         padding-right: 1.5em;
     }
 
-    #content p.has-level-num {
+    #content div.line.has-level-num {
         margin-left: 2.25em;
     }
 
@@ -34,6 +34,11 @@
     #content .level-heading {
         font-weight: bold;
         color: #666;
+    }
+
+    #content table th, #content table td {
+        padding-right: 1.5em;
+        padding-bottom: .25em;
     }
 
 .primary-content {

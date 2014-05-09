@@ -222,6 +222,34 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             flatten_args.paras.push({ text: initial_text.concat(child_text), indentation: my_indentation, group: para_group, class: "" });
         },
 
+        table: function(child, i) {
+            // This is an HTML-like table.
+
+            // We may have heading text from a higher level to display.
+            if (i == 0) render_heading();
+
+            // Render HTML.
+            html = "<table>"
+            child.getchildren()
+                .forEach(function(child) {
+                    if (child.tag == "caption") {
+                        html += "<caption>" + flatten_text(child, flatten_args, true) + "</caption>\n"
+                    }
+                    if (child.tag == "tr") {
+                        html += "<tr>"
+                        child.getchildren()
+                            .forEach(function(child) {
+                                html += "<" + child.tag + ">" + flatten_text(child, flatten_args, true) + "</" + child.tag + ">\n"
+                            });
+                        html += "</tr>\n"
+                    }
+                });
+            html += "</table>\n"
+
+            // Append the paragraph.
+            flatten_args.paras.push({ html: html, text: [], indentation: (indentation||0)+1, group: para_group, class: "" });
+        },
+
         level: function(child, i) {
             // What group will we pass down into the child? If this level is of a certain type,
             // then pass that group information down into all child paragraphs here.
@@ -342,7 +370,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
         });
 }
 
-function flatten_text(node, flatten_args) {
+function flatten_text(node, flatten_args, as_html) {
     /* Turns mixed content <text> nodes into a flat array of text with styling information.
        For example:
           lorem<span style="xyz">ipsum</span>
@@ -362,22 +390,36 @@ function flatten_text(node, flatten_args) {
             ret.push({ text: link_citations(child.text), class: "", style: child.get("style") })
             if (child.tail) ret.push({ text: link_citations(child.tail), class: "" })
         });
+
+    if (as_html) {
+        ret = ret.map(function(item) { return (
+              "<span "
+            + "class=\""
+            + escape_html(item.class)
+            + "\" style=\""
+            + escape_html(item.style)
+            + "\">"
+            + escape_html(item.text)
+            + "</span>");
+        }).join(" ");
+    }
+
     return ret;
+}
+
+function escape_html(html) {
+  return String(html)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 function cited(text, flatten_args) {
     /* Add links to any recognized citations. */
 
     // HTML-escape the content first because we'll be adding raw HTML for the links.
-    function escape_html(html) {
-      return String(html)
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
-
     text = escape_html(text);
 
     // Process citations.

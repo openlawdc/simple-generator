@@ -5,18 +5,24 @@
     <% if (group.group) { %><div class="<%= group.group %>"><% } %> <% // prevent p:last-child { margin-bottom: 0; } from applying by not wraping the p's in unnecessary divs %>
 
     <% group.paras.forEach(function(l) { %>
-        <p class="<%= l.class %> <% if (l.is_placeholder) { %>placeholder<% } %>" style="padding-left: <%= l.indentation*2.25 %>em">
+        <div class="line <%= l.class %> <% if (l.is_placeholder) { %>placeholder<% } %>" style="padding-left: <%= l.indentation*2.25 %>em">
             <% if (l.class == "child-link") { %>
+                <p>
                 <span class="title"><a href="<%= l.filename%>" class="internal-link"><%= l.title%></a></span>
                 <% if (l.section_range[0] && l.section_range[1]) { %>
                     <br><span class="range">§§ <%- l.section_range[0] %> &ndash; <%- l.section_range[1] %></span>
                 <% } %>
+                </p>
+            <% } else if (l.html != null) { %>
+                <%= l.html %>
             <% } else {%>
+                <p>
                 <% l.text.forEach(function(span) { %>
                     <span class="<%- span.class %>" style="<%- span.style %>"><%= span.text %></span>
                 <% }); %>
+                </p>
             <% } %>
-        </p>
+        </div>
     <% }); %>
 
     <% if (group.group) { %></div><% } %>
