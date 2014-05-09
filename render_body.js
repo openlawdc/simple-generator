@@ -29,6 +29,8 @@ exports.get_file_id = function(dom, file, basedir) {
 exports.make_page_title = function(obj) {
     /* Create the canonical display name for a page.*/
 
+    if (!obj.find("type")) throw "Document does not have a <type> element.";
+
     var level_type = obj.find("type").text;
 
     var title = null;
@@ -38,6 +40,7 @@ exports.make_page_title = function(obj) {
 
     } else if (level_type == "section") {
         // this is a section, so show "§ XX-YY".
+        if (!obj.find("num")) throw "Section does not have a <num> element.";
         title = "§ " + obj.find("num").text;
 
     } else if (level_type == "placeholder") {
@@ -62,6 +65,7 @@ exports.make_page_title = function(obj) {
 
     } else {
         // "Division I", "Title 10", "Part XXX", etc.
+        if (!obj.find("prefix")) throw "Document does not have a <prefix> element.";
         title = obj.find("prefix").text;
         if (obj.find("num"))
             title += " " + obj.find("num").text;
