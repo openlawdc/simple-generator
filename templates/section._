@@ -20,7 +20,7 @@
     <body>
             <header>
                 <div class="container">
-                <div class='right'>
+                <div class='right no-print'>
                     <form id='search-form'>
                         <form>
                             <input type="text" id="st-search-input" class="st-search-input" />
@@ -30,7 +30,7 @@
                 <h1 id='sitename'><a href='<%= rootdir %>'>Code of the District of Columbia (Unofficial)</a></h1>
             </div>
             </header>
-            <div class='container'>
+            <div class='main container'>
                 <div class='clearfix' style='width: 100%;'>
                     <div id='sidebar' class='col4 quiet'>
                         <% if (ancestors.length > 0) { %>
@@ -66,10 +66,12 @@
             <footer>
                 <div class='container center'>
                     <p>This is a fast, unofficial interface to the
-                    <a href='http://dccouncil.us/UnofficialDCCode'>Unofficial DC Code</a> by
-                    <a href='https://github.com/openlawdc'>openlawdc</a>.
-                    <a href='https://github.com/openlawdc/simple-generator/issues'>See a problem? Report an issue.</a>
-                    <a href='http://swiftype.com?ref=pb'>Search provided by Swiftype.</a>
+                        <a href='http://dccouncil.us/UnofficialDCCode'>Unofficial DC Code</a> by
+                        <a href='https://github.com/openlawdc'>openlawdc</a>.
+                    </p>
+                    <p>
+                        <a href='https://github.com/openlawdc/simple-generator/issues'>See a problem? Report an issue.</a>
+                        <a href='http://swiftype.com?ref=pb'>Search provided by Swiftype.</a>
                     </p>
                 </div>
             </footer>
