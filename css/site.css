@@ -8,6 +8,21 @@ html, body {
     padding: 0;
 }
 
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+.main {
+    flex: 1;
+}
+
+.container {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
 a {
     color: rgba(67,127,190,1);
     text-decoration: underline;
@@ -64,7 +79,7 @@ footer p {
 }
 
 #sidebar {
-    padding: 0 50px 0 1em;
+    padding: 0 50px 0 0;
     font-size: 13px;
 }
 
@@ -90,5 +105,16 @@ header .st-search-input {
     }
     #content {
         font-size: 14px;
+    }
+}
+
+@media only screen and (max-width: 640px) {
+    .container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    h1, h2, h3, h4, h5, h6, p, li {
+        padding-left: 12px;
+        padding-right: 12px;
     }
 }
