@@ -23,6 +23,7 @@
     "elementtree": "~0.1.5",
     "citation": "~0.6.4",
     "sitemap": "~0.7.1",
-    "traverse": "~0.6.6"
+    "traverse": "~0.6.6",
+    "incr-object": "0.0.0"
   }
 }
