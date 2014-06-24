@@ -40,6 +40,12 @@
         color: #666;
     }
 
+    #content table {
+        /* Override reset.css which sets with to 100%, which
+           makes textual tables appear weirdly wide. */
+        width: auto;
+    }
+
     #content table th, #content table td {
         padding-right: 1.5em;
         padding-bottom: .25em;
@@ -67,18 +73,18 @@
     margin-bottom: .5em;
 }
 
-.form, .table {
+.form {
     max-width: 50em;
     margin: 1em;
     padding: 1em;
     border: 1px solid #ccc;
     background: #eee;
 }
-.form p, .table p {
+.form p {
     margin: 0;
 }
 
-.form p span, .table p span {
+.form p span {
     white-space: pre-wrap;
 }
 

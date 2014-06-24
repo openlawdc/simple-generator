@@ -236,14 +236,14 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             html = "<table>"
             child.getchildren()
                 .forEach(function(child) {
-                    if (child.tag == "caption") {
-                        html += "<caption>" + flatten_text(child, flatten_args, true) + "</caption>\n"
-                    }
                     if (child.tag == "tr") {
                         html += "<tr>"
                         child.getchildren()
                             .forEach(function(child) {
-                                html += "<" + child.tag + ">" + flatten_text(child, flatten_args, true) + "</" + child.tag + ">\n"
+                                html += "<" + child.tag;
+                                if (child.get("colspan"))
+                                    html += " colspan=\"" + parseInt(child.get("colspan")) + "\"";
+                                html += ">" + flatten_text(child, flatten_args, true) + "</" + child.tag + ">\n"
                             });
                         html += "</tr>\n"
                     }
@@ -260,7 +260,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             var child_para_group = para_group;
             var type = child.find("type");
             var is_special_type = false;
-            if (type && ["annotations", "appendices", "form", "table"].indexOf(type.text) >= 0) {
+            if (type && ["annotations", "appendices", "form"].indexOf(type.text) >= 0) {
                 child_para_group = type.text;
                 is_special_type = true;
             }
@@ -367,9 +367,17 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
         }
     };
 
+    // Render the children of this element.
     node.getchildren()
         .filter(function(node) { return node.tag in renderers })
         .forEach(function(child, i) {
+            // When we have a <text><table>...</table></text> element,
+            // execute the <table>-renderer on that element.
+            var table = child.find("table");
+            if (table)
+                child = table;
+
+            // Execute the renderer.
             renderers[child.tag](child, i);
         });
 }
@@ -403,7 +411,7 @@ function flatten_text(node, flatten_args, as_html) {
             + "\" style=\""
             + escape_html(item.style)
             + "\">"
-            + escape_html(item.text)
+            + item.text
             + "</span>");
         }).join(" ");
     }
