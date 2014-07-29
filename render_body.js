@@ -482,8 +482,15 @@ function cited(text, flatten_args) {
         var fn = flatten_args.section_to_filename[cite.dc_code.title + "-" + cite.dc_code.section];
         if (!fn) return; // section not actually in the code?
 
-        return linked(flatten_args.rootdir + "/" + fn[1],
-            cite.match);
+        var cite_text = cite.match;
+
+        // Don't allow any line break immediately after a section symbol.
+        cite_text = cite_text.replace(/§ /g, "§&nbsp;");
+
+        // Don't allow any line break immediately after a hyphen. Use the non-breaking hyphen.
+        cite_text = cite_text.replace(/-/g, "\u2011");
+
+        return linked(flatten_args.rootdir + "/" + fn[1], cite_text);
     }
 
     // Take advantage of the new openlims feature of DC Laws
