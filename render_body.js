@@ -17,9 +17,9 @@ exports.get_file_id = function(dom, file, basedir) {
     // (this is duplicated in make_index.js, except for the +1 for a slash)
     if (basedir.charAt(basedir.length-1) == "/") basedir = basedir.substring(0, basedir.length-1); // chop trailing slash
     var fn = file.substring(basedir.length+1).replace(".xml", "");
-    if (dom.find("type").text == "section")
+    if (dom.get("type") == "section")
         return dom.find("num").text;
-    else if (dom.find("type").text == "placeholder" && dom.find("section"))
+    else if (dom.get("type") == "placeholder" && dom.find("section"))
         return dom.find("section").text;
     // TODO: What happens if there's a link to a section in a placeholder page that has a range of sections?
     else
@@ -29,9 +29,9 @@ exports.get_file_id = function(dom, file, basedir) {
 exports.make_page_title = function(obj) {
     /* Create the canonical display name for a page.*/
 
-    if (!obj.find("type")) throw "Document does not have a <type> element.";
+    if (!obj.get("type")) throw "Document does not have a <type> element.";
 
-    var level_type = obj.find("type").text;
+    var level_type = obj.get("type");
 
     var title = null;
 
@@ -258,10 +258,10 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             // What group will we pass down into the child? If this level is of a certain type,
             // then pass that group information down into all child paragraphs here.
             var child_para_group = para_group;
-            var type = child.find("type");
+            var type = child.get("type");
             var is_special_type = false;
-            if (type && ["annotations", "appendices", "form"].indexOf(type.text) >= 0) {
-                child_para_group = type.text;
+            if (["annotations", "appendices", "form"].indexOf(type) >= 0) {
+                child_para_group = type;
                 is_special_type = true;
             }
 
@@ -284,7 +284,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             // We'll check for this case at the point where we're seeing the child ("(b) Definitions...").
 
             var my_num_heading = [];
-            if (!child.find("type") || is_special_type) {
+            if (!child.get("type") || is_special_type) {
                 // Check if we have two headings bumping together, as noted in the comment block above.
                 // If so, render/discharge the parent heading immediately.
                 if (i == 0 && parent_node_text && parent_node_text.filter(function(x){ return x.class == "level-heading" }).length > 0 && (child.find("num") || child.find("heading"))) {
@@ -361,7 +361,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
 
                 filename: child_filename,
                 title: title,
-                is_placeholder: dom.find("type").text == "placeholder" || (title.indexOf("[Repealed]") >= 0),
+                is_placeholder: dom.get("type") == "placeholder" || (title.indexOf("[Repealed]") >= 0),
                 section_range: section_range
             });
         }
@@ -540,13 +540,13 @@ function get_section_range(id, start_or_end, flatten_args, depth) {
 
         // For sections, return just the section number. Omit the section symbol
         // because that's handled in the template.
-        if (dom.find("type").text == "section") {
+        if (dom.get("type") == "section") {
             var num = dom.find("num").text;
             return num;
         }
 
         // For placeholders...
-        if (dom.find("type").text == "placeholder") {
+        if (dom.get("type") == "placeholder") {
             var level_section = dom.find("section");
             var level_section_start = dom.find("section-start");
             var level_section_end = dom.find("section-end");

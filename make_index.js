@@ -68,9 +68,9 @@ function get_file_info(dom, file) {
     // the part that gets the id is duplicated in render_body.js
     var fn = file.substring(basedir.length);
     var id;
-    if (dom.find("type").text == "section")
+    if (dom.get("type") == "section")
         id = dom.find("num").text;
-    else if (dom.find("type").text == "placeholder" && dom.find("section"))
+    else if (dom.get("type") == "placeholder" && dom.find("section"))
         id = dom.find("section").text;
     // TODO: What happens if there's a link to a section in a placeholder page that has a range of sections?
     else
@@ -78,7 +78,7 @@ function get_file_info(dom, file) {
 
     // for files that have unique filenames across the whole code
     var output_fn = fn;
-    if (dom.find("type").text == "section" || dom.find("type").text == "placeholder")
+    if (dom.get("type") == "section" || dom.get("type") == "placeholder")
         output_fn = "sections/" + path.basename(fn);
     output_fn = output_fn.replace(".xml", ".html")
 
@@ -88,9 +88,9 @@ function get_file_info(dom, file) {
 function add_to_title_shard(fn, dom) {
     // get the title and section number from the <num> element
     var title_sec;
-    if (dom.find("type").text == "section")
+    if (dom.get("type") == "section")
         title_sec = [dom.find("num").text];
-    else if (dom.find("type").text == "placeholder" && dom.find("section"))
+    else if (dom.get("type") == "placeholder" && dom.find("section"))
         title_sec = [dom.find("section").text];
         // TODO: placfeholders with ranges
     else
