@@ -110,14 +110,6 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
         other_resources: other_resources
         });
 
-    // Set the 'has-level-num' class on paragraphs with a level-num span
-    // so that the CSS can take care of the un-indentation needed to get
-    // level numbering in the right place.
-    body_paras.forEach(function(para) {
-        if (para.text.filter(function(span) { return span.class == "level-num" }).length > 0)
-            para.class += " has-level-num";
-    });
-
     // Group the paragraphs into <div>s according to the 'grouop' value
     // that we have set on each paragraph so that we can style ranges of
     // paragraphs including annotations, form, and table-styled paragraphs.
@@ -190,6 +182,12 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
         and table paragraphs).
         */
 
+    // Reset the paragraph group mode when we pass through certain level types.
+    if (node.get("type") == "document" || node.get("type") == "toc")
+        para_group = "toc";
+    if (node.get("type") == "section")
+        para_group = "";
+
     function render_heading() {
         if (parent_node_text) {
             flatten_args.paras.push({ text: parent_node_text, indentation: indentation||0, class: "subheading", group: para_group });
@@ -259,11 +257,8 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             // then pass that group information down into all child paragraphs here.
             var child_para_group = para_group;
             var type = child.get("type");
-            var is_special_type = false;
-            if (["annotations", "appendices", "form"].indexOf(type) >= 0) {
+            if (["annotations", "appendices", "form"].indexOf(type) >= 0)
                 child_para_group = type;
-                is_special_type = true;
-            }
 
             // Numbering and headings of levels aren't usually displayed a way that matches
             // the DOM hierarchy. For instance:
@@ -284,7 +279,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             // We'll check for this case at the point where we're seeing the child ("(b) Definitions...").
 
             var my_num_heading = [];
-            if (!child.get("type") || is_special_type) {
+            if (!child.get("type") && child_para_group != "annotations") {
                 // Check if we have two headings bumping together, as noted in the comment block above.
                 // If so, render/discharge the parent heading immediately.
                 if (i == 0 && parent_node_text && parent_node_text.filter(function(x){ return x.class == "level-heading" }).length > 0 && (child.find("num") || child.find("heading"))) {
@@ -292,17 +287,20 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                     parent_node_text = null;
                 }
 
+                // Otherwise pass the heading into the child.
                 if (child.find("num")) my_num_heading.push( { text: child.find("num").text + " ", class: "level-num" } );
                 if (child.find("heading")) my_num_heading.push( { text: child.find("heading").text + (child_para_group ? "" : " — "), class: "level-heading" } );
 
             } else {
-                // This might be a big level like a Division. Don't use the level-num class,
-                // because the indentation CSS only works for bullet-like numbering.
+                // This might be a big level like a Division or an annotation level.
+                // Don't use the level-num class, because the indentation CSS only
+                // makes sense for bullet-like numbering. Render the heading now.
                 var heading = "";
                 if (child.find("prefix")) heading = child.find("prefix").text + " ";
                 if (child.find("num")) heading += child.find("num").text + ". ";
                 if (child.find("heading")) heading += child.find("heading").text;
-                my_num_heading.push( { text: heading, class: "level-heading" } );
+                if (heading)
+                    flatten_args.paras.push({ text: [{ text: heading, class: null }], indentation: indentation||0, class: "subheading", group: child_para_group });
             }
 
             // If we're the first paragraph within a level, continue to pass down the parent node's
@@ -354,7 +352,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                 child_filename = child_filename.replace(/\/index\.html$/, ''); // no need to put /index.html on URLs
             }
             flatten_args.paras.push({
-                group: "",
+                group: para_group,
                 indentation: (indentation||0),
                 class: "child-link",
                 text: [],

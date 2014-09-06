@@ -1,41 +1,25 @@
     #content h1 {
-        margin: 20px 0 30px 0;
-        padding-bottom: 15px;
+        margin: 20px 0; /* same as paragraph spacing */
+        padding-bottom: 10px;
         border-bottom: 1px solid #ddd;
+        line-height: 1.25em;
     }
 
-    #content p {
-        /* right padding is added here and not at #content so that the gray
-           background on .annotations stretches the full width */
-        padding-right: 1.5em;
+    #content .line-group {
+        /* Especially inside the .annotations group where there is background color,
+           we need padding to keep the text away from the horizontal edges. Also
+           repeated in #content h1.
+           Also add additional vertical spacing between groups. */
+        padding: 5px 1.5em;
     }
 
-    #content div.line {
+    #content .line {
+        /* Paragraph spacing. */
         margin: 0 0 20px;
     }
 
-    #content div.line.has-level-num {
-        margin-left: 2.25em;
-    }
-
-    #content .level-num {
-        font-weight: bold;
-        color: #666;
-    }
-
-    /* paragraphs can have multiple numbers when there are nested levels without intermediate
-       text, e.g. (3) (A) Blah blah. Only reverse-indent the first, otherwise the floats land
-       on top of each other. */
-    #content .level-num:first-child {
-        display: block;
-        float: left;
-        width: 100px;
-        margin-left: -100px;
-        padding-right: .5em;
-        text-align: right;
-    }
-
-    #content .level-heading {
+    #content .level-num, #content .level-heading {
+        /* Bold numbering and headings. */
         font-weight: bold;
         color: #666;
     }
@@ -51,26 +35,18 @@
         padding-bottom: .25em;
     }
 
-.primary-content {
-    padding: 0;
-}
-
-.annotations {
-    margin: 1em 0;
-    padding: 1em 0;
+#content .annotations {
     border-top: 1px solid #ccc;
+    padding-top: 20px; /* same as paragraph spacing */
+    padding-bottom: 20px; /* same as paragraph spacing */
     background: #eee;
     color: #666;
 }
 
-.annotations .subheading {
+.subheading {
     margin-bottom: 0;
     line-height: 1.67em;
     font-weight: bold
-}
-
-.annotations p {
-    margin-bottom: .5em;
 }
 
 .form {
