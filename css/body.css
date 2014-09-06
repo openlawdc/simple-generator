@@ -36,9 +36,16 @@
         width: auto;
     }
 
+    #content table caption {
+        border-bottom: 1px solid #d5d5d5;
+        font-weight: bold;
+    }
+
     #content table th, #content table td {
+        text-indent: 0; /* override */
         padding-right: 1.5em;
         padding-bottom: .25em;
+        font-size: 14px; /* tables tend to be very wide */
     }
 
 #content .annotations {

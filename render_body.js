@@ -256,21 +256,37 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             if (i == 0) render_heading();
 
             // Render HTML.
+            function render_row(child) {
+                html += "<tr>"
+                child.getchildren()
+                    .forEach(function(child) {
+                        html += "<" + child.tag;
+                        if (child.get("colspan"))
+                            html += " colspan=\"" + parseInt(child.get("colspan")) + "\"";
+                        if (child.get("rowspan"))
+                            html += " rowspan=\"" + parseInt(child.get("rowspan")) + "\"";
+                        html += ">" + flatten_text(child, flatten_args, true) + "</" + child.tag + ">\n"
+                    });
+                html += "</tr>\n"
+            }
+
+            function render_table(node) {
+                node.getchildren()
+                    .forEach(function(child) {
+                        if (child.tag == "tr") {
+                            render_row(child)
+                        } else if (child.tag == "thead") {
+                            render_table(child);
+                        } else if (child.tag == "caption") {
+                            html += "<" + child.tag + ">" 
+                                + flatten_text(child, flatten_args, true)
+                                + "</" + child.tag + ">\n"
+                        }
+                    });
+            }
+
             html = "<table>"
-            child.getchildren()
-                .forEach(function(child) {
-                    if (child.tag == "tr") {
-                        html += "<tr>"
-                        child.getchildren()
-                            .forEach(function(child) {
-                                html += "<" + child.tag;
-                                if (child.get("colspan"))
-                                    html += " colspan=\"" + parseInt(child.get("colspan")) + "\"";
-                                html += ">" + flatten_text(child, flatten_args, true) + "</" + child.tag + ">\n"
-                            });
-                        html += "</tr>\n"
-                    }
-                });
+            render_table(child);
             html += "</table>\n"
 
             // Append the paragraph.
