@@ -14,7 +14,7 @@
                 </div>
                 <% if (l.section_range[0] && l.section_range[1]) { %>
                     <div>
-                        <span class="range">§§ <%- l.section_range[0] %> &ndash; <%- l.section_range[1] %></span>
+                        <span class="range">§§ <%- l.section_range[0] %> - <%- l.section_range[1] %></span>
                     </div>
                 <% } %>
             <% } else if (l.html != null) { %>

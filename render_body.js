@@ -26,6 +26,13 @@ exports.get_file_id = function(dom, file, basedir) {
         return fn;
 }
 
+function fix_section_dashes(str) {
+    // Convert hyphens found in section numbers to en-dashes.
+    // Only replace the first hyphen, which separates the title number.
+    // Other hyphens are hyphens within section numbers and are hyphens?
+    return str.replace(/^(\d+)-/, function(m) { return m[0] + "–"; });
+}
+
 exports.make_page_title = function(obj) {
     /* Create the canonical display name for a page.*/
 
@@ -41,7 +48,7 @@ exports.make_page_title = function(obj) {
     } else if (level_type == "section") {
         // this is a section, so show "§ XX-YY".
         if (!obj.find("num")) throw "Section does not have a <num> element.";
-        title = "§ " + obj.find("num").text;
+        title = "§ " + fix_section_dashes(obj.find("num").text);
 
     } else if (level_type == "placeholder") {
         // this is a placeholder, which has a bit of a complex display semantics
@@ -52,16 +59,19 @@ exports.make_page_title = function(obj) {
         var level_section_range_type = obj.find("section-range-type");
 
         // placeholder for a single section
-        if (level_section)
-            title = "§ " + level_section.text;
-
-        // placeholder for a range of sections "XXX-YYY"
-        else if (level_section_range_type.text == "range")
-            title = "§" + level_section_start.text + "-§" + level_section_end.text;
-
-        // placeholder for two (typically consecutive) sections, "XXX, YYY"
-        else if (level_section_range_type.text == "list")
-            title = "§" + level_section_start.text + ", §" + level_section_end.text;
+        if (level_section) {
+            title = "§ " + fix_section_dashes(level_section.text);
+        } else {
+            title = "§§ ";
+            title += fix_section_dashes(level_section_start.text);
+            if (level_section_range_type.text == "range")
+                // placeholder for a range of sections "XXX-YYY"
+                title += " - ";
+            else
+                // placeholder for two (typically consecutive) sections, "XXX, YYY"
+                title += ", ";
+            title += fix_section_dashes(level_section_end.text);
+        }
 
     } else {
         // "Division I", "Title 10", "Part XXX", etc.
@@ -539,8 +549,7 @@ function get_section_range(id, start_or_end, flatten_args, depth) {
         // For sections, return just the section number. Omit the section symbol
         // because that's handled in the template.
         if (dom.get("type") == "section") {
-            var num = dom.find("num").text;
-            return num;
+            return fix_section_dashes(dom.find("num").text);
         }
 
         // For placeholders...
@@ -551,13 +560,14 @@ function get_section_range(id, start_or_end, flatten_args, depth) {
 
             // This placeholder stands in for a single section, so return that number.
             if (level_section)
-                return level_section.text;
+                return fix_section_dashes(level_section.text);
 
             // This placeholder stands in for a range of sections. Return the first or
             // last component of the range depending on whether the caller is looking for
             // the first or last section number.
             else
-                return start_or_end == 0 ? level_section_start.text : level_section_end.text;
+                return start_or_end == 0 ? fix_section_dashes(level_section_start.text)
+                    : fix_section_dashes(level_section_end.text);
         }
 
         // This is a weird case where a big level has no children. Use our title string
