@@ -4,7 +4,8 @@
 
 <div data-swiftype-index='true'>
 <% body.forEach(function(group) { %>
-    <% if (group.group) { %><div class="line-group <%= group.group %>"><% } %> <% // prevent p:last-child { margin-bottom: 0; } from applying by not wraping the p's in unnecessary divs %>
+    <% if (group.group) { %><div class="line-group <%= group.group %> <% if (group.needs_separator) { %>sep<% } %>"><% } %>
+        <% // prevent p:last-child { margin-bottom: 0; } from applying by not wraping the p's in unnecessary divs %>
 
     <% group.paras.forEach(function(l) { %>
         <div class="line <%= l.class %> <% if (l.is_placeholder) { %>placeholder<% } %>" style="text-indent: <%= (l.indentation+(group.group == "primary-content" ? 1 : 0))*1.25 %>em">

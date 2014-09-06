@@ -13,6 +13,12 @@
         padding: 5px 1.5em;
     }
 
+        #content .line-group.sep {
+            border-top: 2px solid black;
+            margin-top: 40px;
+            padding-top: 40px;
+        }
+
     #content .line {
         /* Paragraph spacing. */
         margin: 0 0 20px;
@@ -39,6 +45,7 @@
     border-top: 1px solid #ccc;
     padding-top: 20px; /* same as paragraph spacing */
     padding-bottom: 20px; /* same as paragraph spacing */
+    margin-bottom: 20px; /* same as paragraph spacing, in case content follows such as deeply rendered chapters */
     background: #eee;
     color: #666;
 }
@@ -94,3 +101,17 @@
     color: #444;
     margin-bottom: 5px;
 }
+
+#content .heading {
+    font-weight: bold;
+    line-height: 130%;
+}
+    #content .heading-1 {
+        font-size: 25px;
+    }
+    #content .heading-2 {
+        font-size: 22px;
+    }
+    #content .heading-3 {
+        font-size: 19px;
+    }

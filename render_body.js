@@ -109,16 +109,31 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
     // Get the <text> and <level> nodes that make up the body
     // and flatten them out so the template doesn't have to deal with
     // the recursive nature of <level> nodes.
+
     var body_paras = [];
-    flatten_body(dom, {
-        paras: body_paras,
-        section_to_filename: section_to_filename,
-        section_to_children: section_to_children,
-        basedir: basedir,
-        rootdir: rootdir,
-        filename: filename,
-        other_resources: other_resources
-        });
+
+    var should_render_deeply = 
+        dom.find("prefix")
+        && ["Chapter", "Subchapter", "Part", "Subpart"].indexOf(dom.find("prefix").text) >= 0
+        && !other_resources; // don't render deeply when viewing in the DC Code Editor
+
+    for (var deep = 0; deep <= 1; deep++) {
+        if (deep) {
+            if (!should_render_deeply) break;
+            body_paras.push({ html: "<hr>", text: [], indentation: 0, group: "", class: "" });
+        }
+
+        flatten_body(dom, {
+            paras: body_paras,
+            section_to_filename: section_to_filename,
+            section_to_children: section_to_children,
+            basedir: basedir,
+            rootdir: rootdir,
+            filename: filename,
+            deep: !!deep,
+            other_resources: other_resources
+            });
+    }
 
     // Group the paragraphs into <div>s according to the 'grouop' value
     // that we have set on each paragraph so that we can style ranges of
@@ -127,7 +142,7 @@ exports.process_body = function(filename, dom, section_to_filename, section_to_c
     body_paras.forEach(function(para) {
         if (!para.group) para.group = "primary-content";
         if (para.group != body_groups[body_groups.length-1].group)
-            body_groups.push( { group: para.group, paras: [] } );
+            body_groups.push( { group: para.group, paras: [], needs_separator: para.needs_separator } );
         body_groups[body_groups.length-1].paras.push(para);
     });
 
@@ -339,7 +354,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             // We may have heading text from a higher level to display.
             if (i == 0) render_heading();
 
-            // Append a paragraph for the XInclude.
+            // Resolve the XInclude to a filename and parse the XML.
             var fn = path.join(path.dirname(flatten_args.filename), child.get('href'));
             var dom;
             if (flatten_args.other_resources && fn in flatten_args.other_resources) {
@@ -351,7 +366,37 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             } else {
                 dom = exports.parse_xml_file(fn);
             }
+
             var title = exports.make_page_title(dom);
+
+            // Expand out chapters to render the whole content inline.
+            // Recurse with a different flatten_args because the base URL of
+            // nested XIncludes is different within the referenced file.
+            if (flatten_args.deep) {
+                function shallow_copy(obj) {
+                    return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
+                };
+                var inner_flatten_args = shallow_copy(flatten_args);
+                inner_flatten_args.filename = fn;
+                inner_flatten_args.heading_level = (inner_flatten_args.heading_level||0) + 1;
+
+                // Append a heading for the inner file.
+                flatten_args.paras.push({
+                    text: [{ text: title, class: null }],
+                    indentation: indentation||0,
+                    class: "heading heading-" + inner_flatten_args.heading_level,
+                    needs_separator: i > 0, // put a separator between levels (not before the first)
+                    group: para_group });
+
+                // Append the inner file.
+                flatten_body(dom, inner_flatten_args,
+                    indentation,
+                    parent_node_text, parent_node_indents,
+                    para_group);
+                return;
+            }
+
+            // Append a paragraph for the XInclude.
             var section_range = [null, null];
             var child_filename = child.get('href').replace(".xml", ".html");
             if (flatten_args.basedir) {
