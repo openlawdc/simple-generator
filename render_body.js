@@ -30,7 +30,7 @@ function fix_section_dashes(str) {
     // Convert hyphens found in section numbers to en-dashes.
     // Only replace the first hyphen, which separates the title number.
     // Other hyphens are hyphens within section numbers and are hyphens?
-    return str.replace(/^(\d+)-/, function(m) { return m[0] + "–"; });
+    return str.replace(/^(\d+)-/, "$1–");
 }
 
 exports.make_page_title = function(obj) {
