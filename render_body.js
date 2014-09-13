@@ -506,13 +506,11 @@ function cited(text, flatten_args) {
 
     // Process citations.
     var c = Citation.find(text, {
-        context: {
-            dc_code: {
-                source: 'dc_code'
-            },
-            dc_law: {
-                source: 'dc_code'
-            }
+        dc_code: {
+            source: 'dc_code'
+        },
+        dc_law: {
+            source: 'dc_code'
         },
         excerpt: 40,
         types: ['dc_code', 'dc_law', 'dc_register', 'law', 'stat'],
