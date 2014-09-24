@@ -6,11 +6,8 @@
     }
 
     #content .line-group {
-        /* Especially inside the .annotations group where there is background color,
-           we need padding to keep the text away from the horizontal edges. Also
-           repeated in #content h1.
-           Also add additional vertical spacing between groups. */
-        padding: 5px 1.5em;
+        /* Add additional vertical spacing between groups. */
+        padding: 5px 0;
     }
 
         #content .line-group.sep {
@@ -52,6 +49,8 @@
     border-top: 1px solid #ccc;
     padding-top: 20px; /* same as paragraph spacing */
     padding-bottom: 20px; /* same as paragraph spacing */
+    padding-left: 1.5em;
+    padding-right: 1.5em;
     margin-bottom: 20px; /* same as paragraph spacing, in case content follows such as deeply rendered chapters */
     background: #eee;
     color: #666;
