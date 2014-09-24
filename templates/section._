@@ -53,8 +53,15 @@
                             <p><a href="<%= sibling_next.filename%>"><%- sibling_next.title %></a></p>
                         <% } %>
 
-                        <h2>Current as of...</h2>
-                        <p class="recency"><%- recency_info %></p>
+                        <h2>Publication Information</h2>
+                        <dl id="recency">
+                            <dt>Published On</dt>
+                            <dd><%- recency_info.publication_date_formatted %></dd>
+
+                            <dt>Last Codified Act</dt>
+                            <dd><%- recency_info.last_act %><br>
+                            (effective <%- recency_info.last_act_effective_date_formatted %>)</dd>
+                        </dl>
                     </div>
                     <div class='col8'>
                         <div id='content'>

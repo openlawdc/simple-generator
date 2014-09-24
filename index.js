@@ -7,6 +7,7 @@ var finder = require('findit')(basedir),
     mkdirp = require('mkdirp'),
     _ = require('lodash'),
     fs = require('fs'),
+    moment = require('moment'),
     render_body = require('./render_body.js');
 
 // Path to the template used to render each page.
@@ -18,7 +19,17 @@ if (process.env.TEMPLATE)
 
 var page_template = _.template(fs.readFileSync(page_template_fn));
 
-var recency_info = render_body.parse_xml_file(basedir + "/index.xml").find("meta/recency").text;
+// Load recency information from the index.xml file and store it
+// in an object.
+var recency_info = { };
+render_body.parse_xml_file(basedir + "/index.xml")
+    .find("meta/recency")
+    .findall("*")
+    .forEach(function(node) {
+        recency_info[node.tag.replace(/-/, "_")] = node.text;
+    });
+recency_info.last_act_effective_date_formatted = moment(recency_info.last_act_effective_date).format("MMMM D, YYYY");
+recency_info.publication_date_formatted = moment(recency_info.publication_date).format("dddd, MMMM D, YYYY [at] h:mm a");
 
 // Load pre-made indexes that help us locate the filename for any given section (by citation),
 // and to locate the parent and children of any page.
