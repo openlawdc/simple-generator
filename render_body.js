@@ -36,7 +36,7 @@ function fix_section_dashes(str) {
 exports.make_page_title = function(obj) {
     /* Create the canonical display name for a page.*/
 
-    if (!obj.get("type")) throw "Document does not have a <type> element.";
+    if (!obj.get("type")) throw "Document does not have a <type> attribute.";
 
     var level_type = obj.get("type");
 
