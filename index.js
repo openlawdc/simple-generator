@@ -9,7 +9,14 @@ var finder = require('findit')(basedir),
     fs = require('fs'),
     render_body = require('./render_body.js');
 
-var page_template = _.template(fs.readFileSync('templates/section._'));
+// Path to the template used to render each page.
+// Allow the path to be overridden by an environment
+// variable named TEMPLATE.
+var page_template_fn = 'templates/section._';
+if (process.env.TEMPLATE)
+    page_template_fn = process.env.TEMPLATE;
+
+var page_template = _.template(fs.readFileSync(page_template_fn));
 
 var recency_info = render_body.parse_xml_file(basedir + "/index.xml").find("meta/recency").text;
 
