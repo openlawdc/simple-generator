@@ -227,7 +227,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
             var initial_text = [];
             var my_indentation = indentation || 0;
             if (i == 0 && parent_node_text) {
-                if (para_group) {
+                if (para_group && para_group != "toc") {
                     // In any of the special paragraph classes that we track for grouping,
                     // if there is any numbering or heading text coming from a parent level
                     // don't display it inline in this paragraph. Make a separate heading
@@ -336,6 +336,7 @@ function flatten_body(node, flatten_args, indentation, parent_node_text, parent_
                 // This might be a big level like a Division or an annotation level.
                 // Don't use the level-num class, because the indentation CSS only
                 // makes sense for bullet-like numbering. Render the heading now.
+		// In home-rule-act, this might also just be a section.
                 var heading = "";
                 if (child.find("prefix")) heading = child.find("prefix").text + " ";
                 if (child.find("num")) heading += child.find("num").text + ". ";

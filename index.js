@@ -120,6 +120,7 @@ function convert_file(file) {
     mkdirp.sync(path.dirname(outdir + "/" + section_to_filename[page_id][1]));
     fs.writeFileSync(outdir + "/" + section_to_filename[page_id][1],
         page_template({
+            doctype: process.env.DOCTYPE,
             rootdir: rootdir,
             ancestors: ancestors,
             sibling_previous: make_page_link(get_sibling(page_id, -1)),
