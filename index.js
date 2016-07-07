@@ -7,8 +7,13 @@ var finder = require('findit')(basedir),
     mkdirp = require('mkdirp'),
     _ = require('lodash'),
     fs = require('fs'),
-    moment = require('moment'),
-    render_body = require('./render_body.js');
+    et = require('elementtree'),
+    moment = require('moment');
+
+function parse_xml_file (file) {
+    var xml = fs.readFileSync(file).toString(); // not sure why toSting is needed to make a string
+    return et.parse(xml)._root;
+}
 
 // Path to the template used to render each page.
 // Allow the path to be overridden by an environment
@@ -18,18 +23,6 @@ if (process.env.TEMPLATE)
     page_template_fn = process.env.TEMPLATE;
 
 var page_template = _.template(fs.readFileSync(page_template_fn));
-
-// Load recency information from the index.xml file and store it
-// in an object.
-var recency_info = { };
-render_body.parse_xml_file(basedir + "/index.xml")
-    .find("meta/recency")
-    .findall("*")
-    .forEach(function(node) {
-        recency_info[node.tag.replace(/-/, "_")] = node.text;
-    });
-recency_info.last_act_effective_date_formatted = moment(recency_info.last_act_effective_date).format("MMMM D, YYYY");
-recency_info.publication_date_formatted = moment(recency_info.publication_date).format("dddd, MMMM D, YYYY [at] h:mm a");
 
 // Load pre-made indexes that help us locate the filename for any given section (by citation),
 // and to locate the parent and children of any page.
@@ -74,11 +67,77 @@ if (cluster.isMaster) {
 
 }
 
+function get_file_id (dom, file, basedir) {
+    // Gets the "id" of a file, which is how it appears in the pre-made index files.
+    // (this is duplicated in make_index.js, except for the +1 for a slash)
+    if (basedir.charAt(basedir.length-1) == "/") basedir = basedir.substring(0, basedir.length-1); // chop trailing slash
+    var fn = file.substring(basedir.length+1).replace(".xml", "");
+    if (dom.get("type") == "section")
+        return dom.find("num").text;
+    else if (dom.get("type") == "placeholder" && dom.find("section"))
+        return dom.find("section").text;
+    // TODO: What happens if there's a link to a section in a placeholder page that has a range of sections?
+    else
+        return fn;
+}
+
 function convert_files(finished_callback) {
    finder
     .on('directory', ondirectory)
     .on('file', onfile)
     .on('end', finished_callback);
+}
+
+function calculateRedirect(id) {
+   console.log(id);
+   // Title-13/index
+   // https://beta.code.dccouncil.us/dc/council/code/titles/1/
+   if (id.match(/^Title-([\d\w]+)\/index$/)) {
+      var titleNumber = id.match(/^Title-([\d\w]+)\/index$/)[1];
+      return 'https://beta.code.dccouncil.us/dc/council/code/titles/' + titleNumber + '/';
+   } else if (id.match(/^Title-(\d+)\/Chapter-([\d\w]+)\/index/)) {
+      // Title-1/Chapter-11A/index
+      var match = id.match(/^Title-(\d+)\/Chapter-([\d\w]+)\/index/)
+      var titleNumber = match[1];
+      var chapterNumber = match[2];
+      return 'https://beta.code.dccouncil.us/dc/council/code/titles/' + titleNumber + '/chapters/' + chapterNumber + '/';
+   } else if (id.match(/^Title-(\d+)\/Article-([\d\w]+)\/index/)) {
+      // Title-1/Chapter-11A/index
+      var match = id.match(/^Title-(\d+)\/Article-([\d\w]+)\/index/);
+      var titleNumber = match[1];
+      var articleNumber = match[2];
+      return 'https://beta.code.dccouncil.us/dc/council/code/titles/' + titleNumber + '/articles/' + articleNumber + '/';
+   } else if (id.match(/^Title-(\d+)\/Chapter-([\d\w]+)\/Unit-([\d\w]+)\/index/)) {
+      // Title-1/Chapter-11A/index
+      var match = id.match(/^Title-(\d+)\/Chapter-([\d\w]+)\/Unit-([\d\w]+)\/index/);
+      var titleNumber = match[1];
+      var chapterNumber = match[2];
+      var unitNumber = match[3];
+      // https://beta.code.dccouncil.us/dc/council/code/titles/2/chapters/13/units/A/
+      // https://beta.code.dccouncil.us/dc/council/code/titles/2/chapters/13/units/A/
+      return 'https://beta.code.dccouncil.us/dc/council/code/titles/' + titleNumber +
+         '/chapters/' + chapterNumber + '/units/' + unitNumber;
+   } else if (id.match(/^Title-(\d+)\/Chapter-([\d\w]+)\/Subchapter-([\d\w\-]+)\/index/)) {
+      // Title-1/Chapter-11A/index
+      var match = id.match(/^Title-(\d+)\/Chapter-([\d\w]+)\/Subchapter-([\d\w\-]+)\/index/)
+      var titleNumber = match[1];
+      var chapterNumber = match[2];
+      var subchapterNumber = match[3];
+      // https://beta.code.dccouncil.us/dc/council/code/titles/47/chapters/32/subchapters/III/index.html
+      return 'https://beta.code.dccouncil.us/dc/council/code/titles/' + titleNumber +
+         '/chapters/' + chapterNumber + '/subchapters/' + subchapterNumber;
+   } else if (id.match(/^([\d\w]+)-([\d\w]+).?(\d+)?/)) {
+      // https://beta.code.dccouncil.us/dc/council/code/sections/1-1171.03.html
+      return 'https://beta.code.dccouncil.us/dc/council/code/sections/' + id + '.html';
+   } else if (id.match(/~/g)) {
+      return 'https://beta.code.dccouncil.us/dc/council/code/sections/' + id.split('~')[0] + '.html';
+      // repealed laws
+   } else if (id.match(/:/g)) {
+      // omitted laws
+      return 'https://beta.code.dccouncil.us/dc/council/code/sections/' + id + '.html';
+   } else {
+      throw new Error('cannot handle' + id);
+   }
 }
 
 // Main function to convert a code XML file to its HTML rendering.
@@ -96,98 +155,21 @@ function convert_file(file) {
             return; // procesed by another worker
     }
 
-    console.log(file);
-
     // Load the file & sanity check that this is actually a file for the DC Code.
-    var dom = render_body.parse_xml_file(file);
+    var dom = parse_xml_file(file);
     if (dom.tag != "level") return;
-
-    var rendered_body = render_body.render_body(file, dom, section_to_filename, section_to_children, basedir, rootdir);
 
     // Find the ancestors of this file to show the navigation links to
     // go up the table of contents to higher levels.
-    var ancestors = [];
-    var page_id = render_body.get_file_id(dom, file, basedir);
+    var page_id = get_file_id(dom, file, basedir);
     var parent_id = page_id;
-    while (true) {
-        parent_id = section_to_parent[parent_id];
-        if (!parent_id) break;
-        ancestors.push(make_page_link(parent_id));
-    }
-    ancestors.reverse();
 
     // Write HTML.
     mkdirp.sync(path.dirname(outdir + "/" + section_to_filename[page_id][1]));
     fs.writeFileSync(outdir + "/" + section_to_filename[page_id][1],
         page_template({
             doctype: process.env.DOCTYPE,
-            rootdir: rootdir,
-            ancestors: ancestors,
-            sibling_previous: make_page_link(get_sibling(page_id, -1)),
-            sibling_next: make_page_link(get_sibling(page_id, +1)),
-            title: rendered_body.title,
-            body: rendered_body.rendered,
-            recency_info: recency_info
+            redirect: calculateRedirect(page_id),
+            rootdir: rootdir
         }));
-}
-
-function make_page_link(page_id) {
-    /* This is a utility function to take a page id and make an object
-       with information needed to render a link to that page: href and title. */
-    if (!page_id) return null;
-    var url = rootdir + "/" + section_to_filename[page_id][1];
-    url = url.replace(/\/index\.html$/, ''); // no need to put /index.html on URLs
-    return {
-        filename: url,
-        title: render_body.make_page_title(render_body.parse_xml_file(basedir + "/" + section_to_filename[page_id][0]))
-    };
-}
-
-
-function get_sibling(id, direction) {
-    /* Gets the previous (direction == -1) or next (direction == 1) document
-       in the Code starting at the document whose id is id.
-
-       The preceding document is the document's preceding sibling, if it has
-       one. This perhaps should be changed one day to be the preceding sibling's
-       last-most decedendant. Not sure if that'll be obvious in the UI though.
-
-       If the document doesn't have a preceding sibling, then the previous
-       document will be its parent. If the document doesn't have a following
-       sibling then the next document will be its parent's next document. */
-
-    if (!(id in section_to_parent)) return null;
-
-    // Get the parent document. If we're already at the root, just return null.
-    var parent = section_to_parent[id];
-    if (!(parent in section_to_children)) return null;
-
-    // Look for the previous/next sibling.
-    var seen_me = false;
-    var sibling = null;
-    section_to_children[parent].forEach(function(child_id) {
-        // Looking for the first sibling after the document.
-        if (seen_me && direction == 1 && !sibling) {
-            sibling = child_id;
-        }
-
-        if (child_id == id) {
-            seen_me = true;
-        }
-
-        // Looking for the last sibling before the document.
-        if (!seen_me && direction == -1) {
-            sibling = child_id;
-        }
-    });
-
-    if (!sibling) {
-        if (direction == -1) {
-            return parent;
-        } else {
-            return get_sibling(parent, direction);
-        }
-    }
-
-    return sibling;
 }
